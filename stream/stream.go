@@ -101,6 +101,7 @@ func (s *spiderReflectStream) Register(stream Stream, callbackFunc ...CallbackFu
 
 // get callback func by steam uid and func name
 // used in serialization
+// 获取 callback 的反射模型
 func (s *spiderReflectStream) CallbackFuncByName(steam Stream, funcName string) CallbackFunc {
 	s.lock.Lock()
 	defer s.lock.Unlock()
