@@ -3,7 +3,6 @@ package stream
 import (
 	"testing"
 
-	perr "gitee.com/wheat-os/slubby/pkg/error"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
@@ -22,7 +21,7 @@ func TestEncodeShortStream(t *testing.T) {
 	_, err = DecodeShortStream(buf)
 	require.Error(t, err)
 
-	require.True(t, errors.Is(err, perr.InvalidEncodingErr))
+	require.True(t, errors.Is(err, InvalidEncodingErr))
 }
 
 func TestMustRegisterSpiderStram(t *testing.T) {

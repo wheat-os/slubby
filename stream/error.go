@@ -1,4 +1,4 @@
-package error
+package stream
 
 import "github.com/pkg/errors"
 

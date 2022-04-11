@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"strings"
 	"sync"
-
-	perr "gitee.com/wheat-os/slubby/pkg/error"
 )
 
 // 控制流
@@ -53,7 +51,7 @@ func DecodeShortStream(buf []byte) (Stream, error) {
 	content := bytes.NewBuffer(buf).String()
 	i := strings.Index(content, shortStreamSeparator)
 	if i <= 0 {
-		return nil, perr.InvalidEncodingErr
+		return nil, InvalidEncodingErr
 	}
 
 	return &spiderInfo{
@@ -86,7 +84,7 @@ func signatureFunc(steam Stream, name string) string {
 
 func (s *spiderReflectStream) Register(stream Stream, callbackFunc ...CallbackFunc) error {
 	if stream == nil {
-		return perr.RegisteredNotSpider
+		return RegisteredNotSpider
 	}
 
 	s.lock.Lock()

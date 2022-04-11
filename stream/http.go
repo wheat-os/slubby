@@ -11,8 +11,6 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
-
-	perr "gitee.com/wheat-os/slubby/pkg/error"
 )
 
 type CallbackFunc func(response *HttpResponse) (Stream, error)
@@ -141,7 +139,7 @@ type shortRequest struct {
 // 降低请求等级
 func (s *shortRequest) buildShortRequest(req *HttpRequest) error {
 	if req == nil {
-		return perr.EncodeHttpRequestIsNilErr
+		return EncodeHttpRequestIsNilErr
 	}
 
 	s.Url = req.URL.String()
