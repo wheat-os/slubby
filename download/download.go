@@ -113,7 +113,7 @@ func DefaultDownload() Download {
 	}
 }
 
-func NewShortDownload(mid middle.Middleware, opts ...optionFunc) Download {
+func ShortDownload(mid middle.Middleware, opts ...optionFunc) Download {
 	return &shortDownload{
 		opt:        loadOption(opts...),
 		Middleware: mid,

@@ -70,7 +70,7 @@ func (t *testMiddle) ProcessErr(m *middle.M, req *stream.HttpRequest, err error)
 }
 
 func Test_shortDownload_Do_Middle(t *testing.T) {
-	download := NewShortDownload(
+	download := ShortDownload(
 		new(testMiddle),
 		WithFQDNDelay(20),
 		WithTimeout(20*time.Second),
