@@ -1,6 +1,7 @@
 package stream
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -109,5 +110,28 @@ func TestEncodeHttpRequest(t *testing.T) {
 	decReq, err = DecodeHttpRequest(encBuf)
 	require.NoError(t, err)
 	equalRequest(t, encReq, decReq)
+
+	// body data and header data request
+
+	// header and body req
+	body := `{"data": 123}`
+	bodyIo := bytes.NewBufferString(body)
+	hReq, err := BodyRequest(nil, http.MethodPost, "http://www.test.com", bodyIo, nil)
+	require.NoError(t, err)
+	hReq.Header.Add("content-type", "applocation/json")
+
+	// 创建相同的请求
+	bodyIo = bytes.NewBufferString(body)
+	h2Req, err := BodyRequest(nil, http.MethodPost, "http://www.test.com", bodyIo, nil)
+	require.NoError(t, err)
+	h2Req.Header.Add("content-type", "applocation/json")
+
+	enc1, err := EncodeHttpRequest(hReq)
+	require.NoError(t, err)
+
+	enc2, err := EncodeHttpRequest(h2Req)
+	require.NoError(t, err)
+
+	require.Equal(t, enc1, enc2)
 
 }
