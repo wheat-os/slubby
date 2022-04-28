@@ -26,7 +26,7 @@ func TestDownload(t *testing.T) {
 }
 
 func Test_shortDownload_Do(t *testing.T) {
-	download := DefaultDownload()
+	download := ShortDownload()
 
 	req, err := stream.Request(nil, "https://www.baidu.com", nil)
 	require.NoError(t, err)
@@ -70,10 +70,10 @@ func (t *testMiddle) ProcessErr(m *middle.M, req *stream.HttpRequest, err error)
 }
 
 func Test_shortDownload_Do_Middle(t *testing.T) {
-	download := ShortDownload(
-		new(testMiddle),
+	download := NewDownload(
 		WithFQDNDelay(20),
 		WithTimeout(20*time.Second),
+		WithDownloadMiddle(&testMiddle{}),
 	)
 
 	req, err := stream.Request(nil, "https://www.baidu.com", nil)
