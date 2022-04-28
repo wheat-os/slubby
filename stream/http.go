@@ -223,6 +223,12 @@ type HttpResponse struct {
 	// 带上请求的一些参数
 	Meta map[string]interface{}
 
-	// 反射解析函数
-	ParseName string
+	// 解析函数
+	Callback CallbackFunc
+}
+
+func (h *HttpResponse) WithHttpAndRequestStream(sReq *HttpRequest, req *http.Response) {
+	h.Response = req
+	h.Meta = sReq.Meta
+	h.Callback = sReq.Callback
 }
