@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"gitee.com/wheat-os/slubby/download/middle"
 	"github.com/panjf2000/ants/v2"
 )
 
@@ -18,6 +19,9 @@ type option struct {
 	client *http.Client
 	poll   *ants.Pool
 	once   sync.Once
+
+	// mid
+	middle.Middleware
 }
 
 // 初始化 poll
@@ -78,5 +82,11 @@ func WithTimeout(timeout time.Duration) optionFunc {
 			Timeout:   timeout,
 			KeepAlive: 30 * time.Second,
 		}).DialContext
+	}
+}
+
+func WithDownloadMiddle(mid middle.Middleware) optionFunc {
+	return func(opt *option) {
+		opt.Middleware = mid
 	}
 }

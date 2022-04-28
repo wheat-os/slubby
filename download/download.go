@@ -17,8 +17,6 @@ type Download interface {
 }
 
 type shortDownload struct {
-	middle.Middleware
-
 	// 配置文件
 	opt *option
 }
@@ -68,11 +66,11 @@ func (s *shortDownload) BeforeDownload(
 	m *middle.M,
 	req *stream.HttpRequest,
 ) (*stream.HttpRequest, error) {
-	if s.Middleware == nil {
+	if s.opt.Middleware == nil {
 		return req, nil
 	}
 	m.Next()
-	return s.Middleware.BeforeDownload(m, req)
+	return s.opt.Middleware.BeforeDownload(m, req)
 }
 
 func (s *shortDownload) AfterDownload(
@@ -80,11 +78,11 @@ func (s *shortDownload) AfterDownload(
 	req *stream.HttpRequest,
 	resp *stream.HttpResponse,
 ) (*stream.HttpResponse, error) {
-	if s.Middleware == nil {
+	if s.opt.Middleware == nil {
 		return resp, nil
 	}
 	m.Next()
-	return s.Middleware.AfterDownload(m, req, resp)
+	return s.opt.Middleware.AfterDownload(m, req, resp)
 }
 
 func (s *shortDownload) ProcessErr(
@@ -92,14 +90,14 @@ func (s *shortDownload) ProcessErr(
 	req *stream.HttpRequest,
 	err error,
 ) {
-	if s.Middleware != nil {
+	if s.opt.Middleware != nil {
 		m.Next()
-		s.Middleware.ProcessErr(m, req, err)
+		s.opt.Middleware.ProcessErr(m, req, err)
 	}
 }
 
 func (s *shortDownload) Activate() bool {
-	return s.poll().Running() == 0
+	return s.poll().Running() != 0
 }
 
 func (s *shortDownload) Close() error {
@@ -107,15 +105,14 @@ func (s *shortDownload) Close() error {
 	return nil
 }
 
-func DefaultDownload() Download {
+func ShortDownload() Download {
 	return &shortDownload{
 		opt: loadOption(),
 	}
 }
 
-func ShortDownload(mid middle.Middleware, opts ...optionFunc) Download {
+func NewDownload(opts ...optionFunc) Download {
 	return &shortDownload{
-		opt:        loadOption(opts...),
-		Middleware: mid,
+		opt: loadOption(opts...),
 	}
 }
