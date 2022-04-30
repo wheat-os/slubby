@@ -23,26 +23,3 @@ func TestEncodeShortStream(t *testing.T) {
 
 	require.True(t, errors.Is(err, InvalidEncodingErr))
 }
-
-func TestMustRegisterSpiderStram(t *testing.T) {
-	spider := &TestSpider{
-		Stream: SpiderInfo("test", "www.qq.com"),
-	}
-
-	callback := GetCallbackFuncByName(spider, "Parse")
-	require.Nil(t, callback)
-
-	MustRegisterSpiderStram(spider, spider.Parse, spider.GetList)
-
-	callback = GetCallbackFuncByName(spider, "Parse")
-	require.NotNil(t, callback)
-	callback(nil)
-
-	callback = GetCallbackFuncByName(spider, "ToList")
-	require.Nil(t, callback)
-
-	MustRegisterSpiderStram(spider, spider.ToList)
-
-	callback = GetCallbackFuncByName(spider, "ToList")
-	require.NotNil(t, callback)
-}
