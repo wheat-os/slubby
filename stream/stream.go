@@ -3,7 +3,6 @@ package stream
 import (
 	"bytes"
 	"strings"
-	"sync"
 )
 
 // 控制流
@@ -58,68 +57,4 @@ func DecodeShortStream(buf []byte) (Stream, error) {
 		uid:  content[:i],
 		fqdn: content[i+len(shortStreamSeparator):],
 	}, nil
-}
-
-type spiderReflectStream struct {
-	refFunc map[string]CallbackFunc
-	lock    sync.Mutex
-}
-
-func signatureFunc(steam Stream, name string) string {
-
-	const sigSeparator = "."
-
-	uid := "default"
-	if steam != nil {
-		uid = steam.UId()
-	}
-
-	buf := bytes.NewBuffer(nil)
-	buf.WriteString(uid)
-	buf.WriteString(sigSeparator)
-	buf.WriteString(name)
-
-	return buf.String()
-}
-
-func (s *spiderReflectStream) Register(stream Stream, callbackFunc ...CallbackFunc) error {
-	if stream == nil {
-		return RegisteredNotSpider
-	}
-
-	s.lock.Lock()
-	defer s.lock.Unlock()
-
-	for _, callback := range callbackFunc {
-		s.refFunc[signatureFunc(stream, callback.Name())] = callback
-	}
-
-	return nil
-}
-
-// get callback func by steam uid and func name
-// used in serialization
-// 获取 callback 的反射模型
-func (s *spiderReflectStream) CallbackFuncByName(steam Stream, funcName string) CallbackFunc {
-	s.lock.Lock()
-	defer s.lock.Unlock()
-
-	return s.refFunc[signatureFunc(steam, funcName)]
-
-}
-
-func NewReflectStream() *spiderReflectStream {
-	return &spiderReflectStream{
-		refFunc: make(map[string]CallbackFunc),
-	}
-}
-
-var std = NewReflectStream()
-
-func MustRegisterSpiderStram(steam Stream, callback ...CallbackFunc) error {
-	return std.Register(steam, callback...)
-}
-
-func GetCallbackFuncByName(steam Stream, funcName string) CallbackFunc {
-	return std.CallbackFuncByName(steam, funcName)
 }
