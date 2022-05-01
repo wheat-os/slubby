@@ -5,6 +5,7 @@ import (
 	"encoding/gob"
 	"encoding/json"
 	"io"
+	"io/ioutil"
 	"net/http"
 	urls "net/url"
 	"reflect"
@@ -153,6 +154,9 @@ func (s *shortRequest) buildShortRequest(req *HttpRequest) error {
 			return err
 		}
 		s.Body = body.Bytes()
+
+		// 重置 body
+		req.Body = ioutil.NopCloser(body)
 	}
 
 	// 解析 callback func方法
@@ -223,12 +227,23 @@ type HttpResponse struct {
 	// 带上请求的一些参数
 	Meta map[string]interface{}
 
+	Stream
+
 	// 解析函数
 	Callback CallbackFunc
+
+	// 通过反射方案执行
+	parseFuncName string
 }
 
 func (h *HttpResponse) WithHttpAndRequestStream(sReq *HttpRequest, req *http.Response) {
 	h.Response = req
 	h.Meta = sReq.Meta
 	h.Callback = sReq.Callback
+	h.Stream = sReq.stream
+	h.parseFuncName = sReq.callbackName
+}
+
+func (h *HttpResponse) ParseName() string {
+	return h.parseFuncName
 }

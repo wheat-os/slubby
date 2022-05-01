@@ -24,7 +24,7 @@ func (s *spiderInfo) FQDN() string {
 	return s.fqdn
 }
 
-func SpiderInfo(uid, fqdn string) Stream {
+func shortSpiderInfo(uid, fqdn string) Stream {
 	return &spiderInfo{uid: uid, fqdn: fqdn}
 }
 

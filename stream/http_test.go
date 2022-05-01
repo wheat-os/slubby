@@ -31,7 +31,7 @@ func (TestSpider) GetList(response *HttpResponse) (Stream, error) {
 }
 
 func TestEncodeCallbackFuncName(t *testing.T) {
-	ts := &TestSpider{Stream: SpiderInfo("qq", "www.qq.com"), id: "123"}
+	ts := &TestSpider{Stream: shortSpiderInfo("qq", "www.qq.com"), id: "123"}
 	req := &HttpRequest{
 		Callback: ts.Parse,
 	}
@@ -61,7 +61,7 @@ func equalRequest(t *testing.T, encReq, decReq *HttpRequest) {
 }
 
 func TestEncodeHttpRequest(t *testing.T) {
-	stearm := SpiderInfo("dangdang", "www.baidu.com")
+	stearm := shortSpiderInfo("dangdang", "www.baidu.com")
 	ts := TestSpider{}
 	url := "http://www.baidu.com"
 
@@ -75,6 +75,12 @@ func TestEncodeHttpRequest(t *testing.T) {
 	decReq, err := DecodeHttpRequest(encBuf)
 	require.NoError(t, err)
 	equalRequest(t, encReq, decReq)
+
+	// new Request
+	encToBuf, err := EncodeHttpRequest(encReq)
+	require.NoError(t, err)
+
+	require.Equal(t, encBuf, encToBuf)
 
 	// BodyRequest
 	encReq, err = BodyRequest(stearm, http.MethodPost, url, nil, ts.GetList)
@@ -134,4 +140,23 @@ func TestEncodeHttpRequest(t *testing.T) {
 
 	require.Equal(t, enc1, enc2)
 
+}
+
+func TestToBodyEncode(t *testing.T) {
+	stearm := shortSpiderInfo("dangdang", "www.baidu.com")
+	ts := TestSpider{}
+	url := "http://www.baidu.com"
+
+	// JsonRequest
+	jdata := map[string]interface{}{
+		"username": "dab",
+		"password": "12345644",
+	}
+	encReq, err := JsonRequest(stearm, url, jdata, ts.GetList)
+	require.NoError(t, err)
+	encBuf, err := EncodeHttpRequest(encReq)
+	require.NoError(t, err)
+	encToBuf, err := EncodeHttpRequest(encReq)
+	require.NoError(t, err)
+	require.Equal(t, encBuf, encToBuf)
 }

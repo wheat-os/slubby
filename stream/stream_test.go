@@ -8,7 +8,7 @@ import (
 )
 
 func TestEncodeShortStream(t *testing.T) {
-	shortInfo := SpiderInfo("spider1", "www.baidu.com")
+	shortInfo := shortSpiderInfo("spider1", "www.baidu.com")
 
 	buf := EncodeShortStream(shortInfo)
 
