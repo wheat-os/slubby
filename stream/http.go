@@ -248,12 +248,12 @@ func (h *HttpResponse) ParseName() string {
 	return h.parseFuncName
 }
 
-func (h *HttpResponse) Text() []byte {
+func (h *HttpResponse) Bytes() []byte {
 	buf, _ := ioutil.ReadAll(h.Body)
 	return buf
 }
 
-func (h *HttpResponse) String() string {
+func (h *HttpResponse) Text() string {
 	buf, _ := ioutil.ReadAll(h.Body)
 	return string(buf)
 }

@@ -20,7 +20,7 @@ func (t *testSpider) FQDN() string {
 }
 
 func (t *testSpider) Parse(response *stream.HttpResponse) (stream.Stream, error) {
-	fmt.Println(response)
+	fmt.Println(response.Text())
 	return nil, nil
 }
 
