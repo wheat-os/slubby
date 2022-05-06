@@ -247,3 +247,13 @@ func (h *HttpResponse) WithHttpAndRequestStream(sReq *HttpRequest, req *http.Res
 func (h *HttpResponse) ParseName() string {
 	return h.parseFuncName
 }
+
+func (h *HttpResponse) Text() []byte {
+	buf, _ := ioutil.ReadAll(h.Body)
+	return buf
+}
+
+func (h *HttpResponse) String() string {
+	buf, _ := ioutil.ReadAll(h.Body)
+	return string(buf)
+}
