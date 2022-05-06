@@ -15,13 +15,13 @@ type reflectSpider struct {
 	refFunc map[string]reflect.Value
 }
 
-type spiderManage struct {
+type Manage struct {
 	manage map[string]*reflectSpider
 	lock   sync.RWMutex
 }
 
 // register Spider
-func (s *spiderManage) MustRegister(sp Spider) {
+func (s *Manage) MustRegister(sp Spider) {
 
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -52,7 +52,7 @@ func (s *spiderManage) MustRegister(sp Spider) {
 	s.manage[sp.UId()] = spiderRef
 }
 
-func (s *spiderManage) RegisterCallbackFunc(sp Spider, callback stream.CallbackFunc) {
+func (s *Manage) RegisterCallbackFunc(sp Spider, callback stream.CallbackFunc) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	refSpider := s.manage[sp.UId()]
@@ -68,7 +68,7 @@ func (s *spiderManage) RegisterCallbackFunc(sp Spider, callback stream.CallbackF
 }
 
 // 爬虫解析方案
-func (s *spiderManage) ParseResp(resp *stream.HttpResponse) (stream.Stream, error) {
+func (s *Manage) ParseResp(resp *stream.HttpResponse) (stream.Stream, error) {
 	// 优先执行 callback
 	if resp.Callback != nil {
 		return resp.Callback(resp)
@@ -127,8 +127,8 @@ func (s *spiderManage) ParseResp(resp *stream.HttpResponse) (stream.Stream, erro
 	return nil, nil
 }
 
-func SpiderManage() *spiderManage {
-	return &spiderManage{
+func SpiderManage() *Manage {
+	return &Manage{
 		manage: make(map[string]*reflectSpider),
 	}
 }

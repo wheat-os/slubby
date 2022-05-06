@@ -105,14 +105,8 @@ func (s *shortDownload) Close() error {
 	return nil
 }
 
-func ShortDownload() Download {
+func ShortDownload(opt ...optionFunc) Download {
 	return &shortDownload{
-		opt: loadOption(),
-	}
-}
-
-func NewDownload(opts ...optionFunc) Download {
-	return &shortDownload{
-		opt: loadOption(opts...),
+		opt: loadOption(opt...),
 	}
 }

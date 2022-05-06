@@ -18,13 +18,11 @@ func (s *StreamList) Iterator() func() Stream {
 
 		return nil
 	}
-}
 
+}
 func StreamLists(self Stream, streams ...Stream) Stream {
 	return &StreamList{
 		Stream:  self,
 		streams: streams,
 	}
 }
-
-// Stream

@@ -6,7 +6,7 @@ import (
 )
 
 type Outputter interface {
-	Put(item stream.Stream)
+	Put(item stream.Item)
 
 	Close() error
 	Activate() bool
@@ -22,7 +22,7 @@ func (s *shortOutputter) poll() *ants.Pool {
 	return s.opt.poll
 }
 
-func (s *shortOutputter) Put(item stream.Stream) {
+func (s *shortOutputter) Put(item stream.Item) {
 	if s.opt.pip == nil {
 		return
 	}
@@ -34,7 +34,11 @@ func (s *shortOutputter) Put(item stream.Stream) {
 
 func (s *shortOutputter) Close() error {
 	s.poll().Release()
-	return s.opt.pip.CloseSpider()
+
+	if s.opt.pip != nil {
+		return s.opt.pip.CloseSpider()
+	}
+	return nil
 }
 
 func (s *shortOutputter) OpenPipline() error {

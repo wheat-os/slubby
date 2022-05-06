@@ -1,11 +1,15 @@
 package scheduler
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
 	"gitee.com/wheat-os/slubby/stream"
+	"gitee.com/wheat-os/wlog"
+	"github.com/panjf2000/ants/v2"
 	"github.com/stretchr/testify/require"
 )
 
@@ -64,4 +68,36 @@ func Test_shortScheduler_Activate(t *testing.T) {
 
 	require.Equal(t, scd.Activate(), false)
 
+}
+
+func Test_shortScheduler_RecvCtxCancel(t *testing.T) {
+	cxt, chanel := context.WithCancel(context.Background())
+
+	scd := ShortScheduler()
+
+	ch := scd.RecvCtxCancel(cxt)
+	wlog.Info(ch)
+
+	s := scd.(*shortScheduler)
+	require.False(t, s.isCancel)
+
+	chanel()
+	time.Sleep(time.Second)
+
+	require.True(t, s.isCancel)
+	require.False(t, s.Activate())
+
+}
+
+func TestSubmit(t *testing.T) {
+	poll, _ := ants.NewPool(5)
+
+	for i := 0; i < 10; i++ {
+		poll.Submit(func() {
+			fmt.Println(i)
+			time.Sleep(time.Second)
+		})
+	}
+
+	fmt.Println(111111111111111)
 }
