@@ -2,6 +2,7 @@ package temp
 
 import (
 	"gitee.com/wheat-os/slubby/download"
+	"gitee.com/wheat-os/slubby/download/middle"
 	"gitee.com/wheat-os/slubby/engine"
 	"gitee.com/wheat-os/slubby/outputter"
 	"gitee.com/wheat-os/slubby/scheduler"
@@ -20,7 +21,15 @@ var tempScheduler = scheduler.ShortScheduler(
 )
 
 // Download
-var tempDownload = download.ShortDownload()
+
+// download middle
+var tempMiddleware = middle.MiddleGroup(
+	middle.LogMiddle(),
+)
+
+var tempDownload = download.ShortDownload(
+	download.WithDownloadMiddle(tempMiddleware),
+)
 
 // Outputter
 var tempOutputter = outputter.ShortOutputter()

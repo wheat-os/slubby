@@ -96,7 +96,6 @@ func (e *shortEngine) fromScheduler(to stream.Stream) {
 	case *stream.HttpRequest:
 
 		resp, err := e.opt.eDownload.Do(req)
-		wlog.Infof(" download is complete %s, header: %v", req.URL, req)
 
 		if err != nil {
 			wlog.Error(err)
@@ -159,7 +158,7 @@ func (e *shortEngine) Register(sp spider.Spider) error {
 	return nil
 }
 
-func ShortEngine(opts ...optionFunc) Engine {
+func ShortEngine(opts ...optionFunc) *shortEngine {
 	ops := loadOption(opts...)
 
 	return &shortEngine{

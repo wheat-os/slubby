@@ -35,11 +35,11 @@ type Middleware interface {
 	ProcessErr(m *M, req *stream.HttpRequest, err error)
 }
 
-type MiddlewareGroup []Middleware
+type middleGroup []Middleware
 
-func NewMiddleGroup(m ...Middleware) MiddlewareGroup { return m }
+func MiddleGroup(m ...Middleware) Middleware { return middleGroup(m) }
 
-func (mid MiddlewareGroup) BeforeDownload(m *M, req *stream.HttpRequest) (*stream.HttpRequest, error) {
+func (mid middleGroup) BeforeDownload(m *M, req *stream.HttpRequest) (*stream.HttpRequest, error) {
 
 	var err error
 	for _, handle := range mid {
@@ -53,7 +53,7 @@ func (mid MiddlewareGroup) BeforeDownload(m *M, req *stream.HttpRequest) (*strea
 	return req, err
 }
 
-func (mid MiddlewareGroup) AfterDownload(m *M, req *stream.HttpRequest, resp *stream.HttpResponse) (*stream.HttpResponse, error) {
+func (mid middleGroup) AfterDownload(m *M, req *stream.HttpRequest, resp *stream.HttpResponse) (*stream.HttpResponse, error) {
 	var err error
 	for _, handle := range mid {
 		// 检查是否向下中继
@@ -66,7 +66,7 @@ func (mid MiddlewareGroup) AfterDownload(m *M, req *stream.HttpRequest, resp *st
 	return resp, err
 }
 
-func (mid MiddlewareGroup) ProcessErr(m *M, req *stream.HttpRequest, resp *stream.HttpResponse, err error) {
+func (mid middleGroup) ProcessErr(m *M, req *stream.HttpRequest, err error) {
 
 	for _, handle := range mid {
 		// 检查是否向下中继
