@@ -21,40 +21,40 @@ func init() {
 // **************************************** Scheduler ***************************************
 
 // filter
-var tempFilter = filter.ShortBloomFilter()
+var filterModule = filter.ShortBloomFilter()
 
 // buffer
-var tempBuffer = buffer.ShortQueue()
+var bufferModule = buffer.ShortQueue()
 
-var tempScheduler = scheduler.ShortScheduler(
-	scheduler.WithFilter(tempFilter),
-	scheduler.WithBuffer(tempBuffer),
+var schedulerModule = scheduler.ShortScheduler(
+	scheduler.WithFilter(filterModule),
+	scheduler.WithBuffer(bufferModule),
 )
 
 // **************************************** Download ***************************************
 // download middle
-var tempMiddleware = middle.MiddleGroup(
+var downloadMiddlewareModlue = middle.MiddleGroup(
 	middle.LogMiddle(),
 )
 
-var tempDownload = download.ShortDownload(
-	download.WithDownloadMiddle(tempMiddleware),
+var downloadModule = download.ShortDownload(
+	download.WithDownloadMiddle(downloadMiddlewareModlue),
 )
 
 // *************************************** Outputter **************************************
 
 // pipline
-var tempPipline = pipline.GroupPipline(
+var piplineModule = pipline.GroupPipline(
 	&TempPipline{},
 )
 
-var tempOutputter = outputter.ShortOutputter(
-	outputter.WithPipline(tempPipline),
+var outputterModule = outputter.ShortOutputter(
+	outputter.WithPipline(piplineModule),
 )
 
 // ***************************************** Engine ***************************************
 var DefaultEngine = engine.ShortEngine(
-	engine.WithScheduler(tempScheduler),
-	engine.WithDownload(tempDownload),
-	engine.WithOutputter(tempOutputter),
+	engine.WithScheduler(schedulerModule),
+	engine.WithDownload(downloadModule),
+	engine.WithOutputter(outputterModule),
 )
