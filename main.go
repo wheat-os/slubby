@@ -1,6 +1,6 @@
 package main
 
-import "gitee.com/wheat-os/wlog"
+import "github.com/wheat-os/wlog"
 
 func main() {
 	wlog.SetStdOptions(

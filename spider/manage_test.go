@@ -3,8 +3,8 @@ package spider
 import (
 	"testing"
 
-	"gitee.com/wheat-os/slubby/stream"
 	"github.com/stretchr/testify/require"
+	"github.com/wheat-os/slubby/stream"
 )
 
 type testSpider struct {

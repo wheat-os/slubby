@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"gitee.com/wheat-os/slubby/download/middle"
-	"gitee.com/wheat-os/slubby/stream"
 	"github.com/panjf2000/ants/v2"
 	"github.com/stretchr/testify/require"
+	"github.com/wheat-os/slubby/download/middle"
+	"github.com/wheat-os/slubby/stream"
 )
 
 func TestDownload(t *testing.T) {

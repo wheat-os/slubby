@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"gitee.com/wheat-os/slubby/stream"
-	"gitee.com/wheat-os/wlog"
 	"github.com/panjf2000/ants/v2"
 	"github.com/stretchr/testify/require"
+	"github.com/wheat-os/slubby/stream"
+	"github.com/wheat-os/wlog"
 )
 
 func putTestRequest(scd Scheduler, count int) error {

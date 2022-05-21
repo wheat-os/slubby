@@ -5,9 +5,9 @@ import (
 	"sync/atomic"
 	"unsafe"
 
-	"gitee.com/wheat-os/slubby/stream"
-	"gitee.com/wheat-os/wlog"
 	"github.com/pkg/errors"
+	"github.com/wheat-os/slubby/stream"
+	"github.com/wheat-os/wlog"
 )
 
 type Scheduler interface {

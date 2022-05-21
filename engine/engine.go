@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	"gitee.com/wheat-os/slubby/spider"
-	"gitee.com/wheat-os/slubby/stream"
-	"gitee.com/wheat-os/wlog"
 	"github.com/panjf2000/ants/v2"
+	"github.com/wheat-os/slubby/spider"
+	"github.com/wheat-os/slubby/stream"
+	"github.com/wheat-os/wlog"
 )
 
 type Engine interface {

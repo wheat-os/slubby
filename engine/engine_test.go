@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"gitee.com/wheat-os/slubby/stream"
-	"gitee.com/wheat-os/wlog"
+	"github.com/wheat-os/slubby/stream"
+	"github.com/wheat-os/wlog"
 )
 
 type testSpider struct{}

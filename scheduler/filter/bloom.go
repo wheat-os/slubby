@@ -6,8 +6,8 @@ import (
 	"os"
 	"sync"
 
-	"gitee.com/wheat-os/slubby/pkg/bitset"
-	"gitee.com/wheat-os/slubby/stream"
+	"github.com/wheat-os/slubby/pkg/bitset"
+	"github.com/wheat-os/slubby/stream"
 )
 
 type Filter interface {

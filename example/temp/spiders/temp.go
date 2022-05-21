@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"sync"
 
-	"gitee.com/wheat-os/slubby/spider"
-	"gitee.com/wheat-os/slubby/stream"
+	"github.com/wheat-os/slubby/spider"
+	"github.com/wheat-os/slubby/stream"
 )
 
 type TempSpider struct{}

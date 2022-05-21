@@ -3,7 +3,7 @@ package spider
 import (
 	"fmt"
 
-	"gitee.com/wheat-os/slubby/stream"
+	"github.com/wheat-os/slubby/stream"
 )
 
 type TestSpider struct {

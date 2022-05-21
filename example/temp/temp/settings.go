@@ -1,15 +1,15 @@
 package temp
 
 import (
-	"gitee.com/wheat-os/slubby/download"
-	"gitee.com/wheat-os/slubby/download/middle"
-	"gitee.com/wheat-os/slubby/engine"
-	"gitee.com/wheat-os/slubby/outputter"
-	"gitee.com/wheat-os/slubby/outputter/pipline"
-	"gitee.com/wheat-os/slubby/scheduler"
-	"gitee.com/wheat-os/slubby/scheduler/buffer"
-	"gitee.com/wheat-os/slubby/scheduler/filter"
-	"gitee.com/wheat-os/wlog"
+	"github.com/wheat-os/slubby/download"
+	"github.com/wheat-os/slubby/download/middle"
+	"github.com/wheat-os/slubby/engine"
+	"github.com/wheat-os/slubby/outputter"
+	"github.com/wheat-os/slubby/outputter/pipline"
+	"github.com/wheat-os/slubby/scheduler"
+	"github.com/wheat-os/slubby/scheduler/buffer"
+	"github.com/wheat-os/slubby/scheduler/filter"
+	"github.com/wheat-os/wlog"
 )
 
 // ***************************************** Logger *****************************************

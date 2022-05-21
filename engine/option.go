@@ -5,12 +5,12 @@ import (
 	"sync"
 	"time"
 
-	"gitee.com/wheat-os/slubby/download"
-	"gitee.com/wheat-os/slubby/outputter"
-	"gitee.com/wheat-os/slubby/scheduler"
-	"gitee.com/wheat-os/slubby/spider"
-	"gitee.com/wheat-os/wlog"
 	"github.com/panjf2000/ants/v2"
+	"github.com/wheat-os/slubby/download"
+	"github.com/wheat-os/slubby/outputter"
+	"github.com/wheat-os/slubby/scheduler"
+	"github.com/wheat-os/slubby/spider"
+	"github.com/wheat-os/wlog"
 )
 
 type option struct {

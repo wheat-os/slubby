@@ -3,9 +3,9 @@ package download
 import (
 	"net/http"
 
-	"gitee.com/wheat-os/slubby/download/middle"
-	"gitee.com/wheat-os/slubby/stream"
 	"github.com/panjf2000/ants/v2"
+	"github.com/wheat-os/slubby/download/middle"
+	"github.com/wheat-os/slubby/stream"
 )
 
 type Download interface {

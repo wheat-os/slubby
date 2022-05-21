@@ -1,6 +1,6 @@
 package middle
 
-import "gitee.com/wheat-os/slubby/stream"
+import "github.com/wheat-os/slubby/stream"
 
 const (
 	nextMiddleM = iota

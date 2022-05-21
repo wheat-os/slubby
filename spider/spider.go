@@ -1,6 +1,6 @@
 package spider
 
-import "gitee.com/wheat-os/slubby/stream"
+import "github.com/wheat-os/slubby/stream"
 
 type Spider interface {
 	stream.Stream

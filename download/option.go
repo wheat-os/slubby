@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"gitee.com/wheat-os/slubby/download/middle"
 	"github.com/panjf2000/ants/v2"
+	"github.com/wheat-os/slubby/download/middle"
 )
 
 type option struct {

@@ -1,7 +1,7 @@
 package temp
 
 import (
-	"gitee.com/wheat-os/slubby/stream"
+	"github.com/wheat-os/slubby/stream"
 )
 
 type TempPipline struct{}

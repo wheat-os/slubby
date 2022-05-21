@@ -1,8 +1,8 @@
 package outputter
 
 import (
-	"gitee.com/wheat-os/slubby/stream"
 	"github.com/panjf2000/ants/v2"
+	"github.com/wheat-os/slubby/stream"
 )
 
 type Outputter interface {

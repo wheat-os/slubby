@@ -1,12 +1,12 @@
-module gitee.com/wheat-os/slubby
+module github.com/wheat-os/slubby
 
 go 1.17
 
 require (
-	gitee.com/wheat-os/wlog v1.0.2
 	github.com/panjf2000/ants/v2 v2.4.8
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.7.1
+	github.com/wheat-os/wlog v1.0.2
 )
 
 require (

@@ -4,8 +4,8 @@ import (
 	"runtime"
 	"sync"
 
-	"gitee.com/wheat-os/slubby/outputter/pipline"
 	"github.com/panjf2000/ants/v2"
+	"github.com/wheat-os/slubby/outputter/pipline"
 )
 
 type option struct {

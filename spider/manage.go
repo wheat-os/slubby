@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"sync"
 
-	"gitee.com/wheat-os/slubby/stream"
 	"github.com/pkg/errors"
+	"github.com/wheat-os/slubby/stream"
 )
 
 type reflectSpider struct {

@@ -1,8 +1,8 @@
 package pipline
 
 import (
-	"gitee.com/wheat-os/slubby/stream"
 	"github.com/pkg/errors"
+	"github.com/wheat-os/slubby/stream"
 )
 
 type Pipline interface {

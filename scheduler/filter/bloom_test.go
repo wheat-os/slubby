@@ -6,8 +6,8 @@ import (
 	"os"
 	"testing"
 
-	"gitee.com/wheat-os/slubby/stream"
 	"github.com/stretchr/testify/require"
+	"github.com/wheat-os/slubby/stream"
 )
 
 func TestShort_BloomFilter(t *testing.T) {

@@ -3,9 +3,9 @@ package outputter
 import (
 	"testing"
 
-	"gitee.com/wheat-os/slubby/stream"
-	"gitee.com/wheat-os/wlog"
 	"github.com/stretchr/testify/require"
+	"github.com/wheat-os/slubby/stream"
+	"github.com/wheat-os/wlog"
 )
 
 type testPipline struct{}

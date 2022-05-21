@@ -1,8 +1,8 @@
 package scheduler
 
 import (
-	"gitee.com/wheat-os/slubby/scheduler/buffer"
-	"gitee.com/wheat-os/slubby/scheduler/filter"
+	"github.com/wheat-os/slubby/scheduler/buffer"
+	"github.com/wheat-os/slubby/scheduler/filter"
 )
 
 type optionFunc = func(o *option)
