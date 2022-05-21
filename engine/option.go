@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"runtime"
 	"sync"
 	"time"
 
@@ -46,7 +45,7 @@ type optionFunc func(o *option)
 // 默认
 func loadOption(opts ...optionFunc) *option {
 	ops := &option{
-		threadCount: runtime.NumCPU(),
+		threadCount: 64,
 		checkTime:   time.Second,
 
 		eDownload:  download.ShortDownload(),
