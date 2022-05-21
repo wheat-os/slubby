@@ -148,6 +148,8 @@ func (e *shortEngine) Close() {
 	if err := e.opt.eOutPutter.Close(); err != nil {
 		wlog.Error(err)
 	}
+
+	wlog.Info("the spider shuts down successfully")
 }
 
 func (e *shortEngine) Register(sp spider.Spider) error {
