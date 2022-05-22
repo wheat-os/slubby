@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/panjf2000/ants/v2"
+	"github.com/wheat-os/slubby/download/limiter"
 	"github.com/wheat-os/slubby/download/middle"
 )
 
@@ -14,7 +15,7 @@ type option struct {
 	// 下载器最大并发数
 	concurrentRequest int
 	// 每个 FQDN 下载完成后的延迟时间
-	delay int
+	limiter limiter.Limiter
 
 	client *http.Client
 	poll   *ants.Pool
@@ -42,7 +43,6 @@ func loadOption(opts ...optionFunc) *option {
 	ops := &option{
 		//  -1 == Max
 		concurrentRequest: 8,
-		delay:             -1,
 		client:            http.DefaultClient,
 	}
 
@@ -62,9 +62,9 @@ func WithConcurrentRequest(num int) optionFunc {
 	}
 }
 
-func WithFQDNDelay(delay int) optionFunc {
+func WithLimiter(lim limiter.Limiter) optionFunc {
 	return func(opt *option) {
-		opt.delay = delay
+		opt.limiter = lim
 	}
 }
 
