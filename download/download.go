@@ -43,6 +43,12 @@ func (s *shortDownload) Do(req *stream.HttpRequest) (*stream.HttpResponse, error
 
 	ch := make(chan struct{})
 	s.poll().Submit(func() {
+
+		// 获取 request 令牌
+		if s.opt.limiter != nil {
+			s.opt.limiter.Allow(req)
+		}
+
 		resp, err = s.client().Do(req.Request)
 		ch <- struct{}{}
 	})

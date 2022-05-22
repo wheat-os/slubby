@@ -33,12 +33,18 @@ var schedulerModule = scheduler.ShortScheduler(
 
 // **************************************** Download ***************************************
 // download middle
-var downloadMiddlewareModlue = middle.MiddleGroup(
+var downloadMiddlewareModule = middle.MiddleGroup(
 	middle.LogMiddle(),
 )
 
+// download limiter
+// var downloadLimiterModule = limiter.ShortLimiter(
+// 	time.Second * 3,
+// )
+
 var downloadModule = download.ShortDownload(
-	download.WithDownloadMiddle(downloadMiddlewareModlue),
+	// download.WithLimiter(downloadLimiterModule),
+	download.WithDownloadMiddle(downloadMiddlewareModule),
 )
 
 // *************************************** Outputter **************************************
