@@ -37,7 +37,7 @@ func (s *shortDownload) Do(req *stream.HttpRequest) (*stream.HttpResponse, error
 	)
 
 	m := middle.MC()
-	if req, err = s.BeforeDownload(m, req); err != nil {
+	if req, err = s.BeforeDownload(m, req); err != nil || req == nil {
 		return nil, err
 	}
 
