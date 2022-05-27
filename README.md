@@ -1,37 +1,34 @@
 # slubby
 
-#### 介绍
-一个 go 由语言开发的组件化爬虫框架。
+[English documentation](./README.en.md)
 
-#### 软件架构
-软件架构说明
+### slubby 简介
 
+slubby 是一个 基于 go 语言的、组件化的、高扩展性的、快速的、爬虫开发组件库，可以配合 slub 手脚架工具实现 go 语言爬虫的快速快发。
 
-#### 安装教程
+### 功能特性
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+- 组件化，可以自由替换支持组件来获取不同的表现。
+  
+- 扩展性良好，支持多个过程中间件，高效扩展爬虫功能。
+  
+- 搭配 slub 手脚架快速开发爬虫。
+  
+- 更多常用爬虫组件支持。
+  
 
-#### 使用说明
+### 要求
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+- go 1.15
+  
+- go mod
+  
 
-#### 参与贡献
+### 安装方法（slub）
 
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
+```shell
+# 这个方法会安装 slub 爬虫手脚架，我们将使用 slub 来创建 slubby 项目
+go install github/wheat-os/slub@latest
+```
 
-
-#### 特技
-
-1.  使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2.  Gitee 官方博客 [blog.github.com](https://blog.github.com)
-3.  你可以 [https://github.com/explore](https://github.com/explore) 这个地址来了解 Gitee 上的优秀开源项目
-4.  [GVP](https://github.com/gvp) 全称是 Gitee 最有价值开源项目，是综合评定出的优秀开源项目
-5.  Gitee 官方提供的使用手册 [https://github.com/help](https://github.com/help)
-6.  Gitee 封面人物是一档用来展示 Gitee 会员风采的栏目 [https://github.com/gitee-stars/](https://github.com/gitee-stars/)
+### 快速开始
