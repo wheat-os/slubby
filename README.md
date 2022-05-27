@@ -32,3 +32,4 @@ go install github/wheat-os/slub@latest
 ```
 
 ### 快速开始
+[查看快速开始文档](./docs/use/first.md)
