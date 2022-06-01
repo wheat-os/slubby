@@ -15,13 +15,13 @@ type Filter interface {
 	Passage(req *stream.HttpRequest) (bool, error)
 
 	// 重置过滤器
-	Resert()
+	Reset()
 
 	Close() error
 }
 
 type BloomFilter struct {
-	set       *bitset.BitSet
+	set       bitset.BitSet
 	mu        sync.Mutex
 	filePath  string
 	hashCount int
@@ -63,7 +63,7 @@ func (b *BloomFilter) Passage(req *stream.HttpRequest) (bool, error) {
 }
 
 // 重置过滤器
-func (b *BloomFilter) Resert() {
+func (b *BloomFilter) Reset() {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -88,7 +88,7 @@ func (b *BloomFilter) Close() error {
 	return nil
 }
 
-func loadBloomSet(size uint64, filePath string) *bitset.BitSet {
+func loadBloomSet(size uint64, filePath string) bitset.BitSet {
 	if filePath != "" {
 		if f, err := os.Open(filePath); err == nil {
 			defer f.Close()

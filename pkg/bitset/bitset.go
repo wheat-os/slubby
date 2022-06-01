@@ -11,28 +11,38 @@ const (
 
 type bit = uint8
 
-type BitSet struct {
+type bitSet struct {
 	length uint64
 	set    []byte
 }
 
-func NewBitSet(size uint64) *BitSet {
-	return &BitSet{
+type BitSet interface {
+	SetBit(offset uint64, boolen bool)
+	Check(offset uint64) bool
+	Size() uint64
+
+	EncodeBitSet() []byte
+
+	Reset()
+}
+
+func NewBitSet(size uint64) BitSet {
+	return &bitSet{
 		length: size,
 		set:    make([]byte, (size/bitSize)+1),
 	}
 }
 
-func NewBitSetBySetContent(set []byte) *BitSet {
+func NewBitSetBySetContent(set []byte) BitSet {
 	length := binary.BigEndian.Uint64(set[:8])
-	return &BitSet{
+	return &bitSet{
 		length: length,
 		set:    set[8:],
 	}
 }
 
 // 扩容
-func (b *BitSet) flashing(size uint64) {
+func (b *bitSet) flashing(size uint64) {
 	if size <= b.length || int(size/bitSize)+1 <= len(b.set) {
 		return
 	}
@@ -43,7 +53,7 @@ func (b *BitSet) flashing(size uint64) {
 	b.set = dst
 }
 
-func (b *BitSet) SetBit(offset uint64, boolen bool) {
+func (b *bitSet) SetBit(offset uint64, boolen bool) {
 	// set true
 	i, sv := offset/bitSize, offset%bitSize
 
@@ -59,7 +69,7 @@ func (b *BitSet) SetBit(offset uint64, boolen bool) {
 	b.set[i] &= ^(base >> sv)
 }
 
-func (b *BitSet) Check(offset uint64) bool {
+func (b *bitSet) Check(offset uint64) bool {
 
 	if offset > b.length {
 		return false
@@ -71,11 +81,11 @@ func (b *BitSet) Check(offset uint64) bool {
 	return (b.set[i] & sv) != 0
 }
 
-func (b *BitSet) Size() uint64 {
+func (b *bitSet) Size() uint64 {
 	return b.length
 }
 
-func (b *BitSet) EncodeBitSet() []byte {
+func (b *bitSet) EncodeBitSet() []byte {
 	buf := bytes.NewBuffer(nil)
 	bf := make([]byte, 8)
 	binary.BigEndian.PutUint64(bf, b.length)
@@ -84,7 +94,7 @@ func (b *BitSet) EncodeBitSet() []byte {
 	return buf.Bytes()
 }
 
-func (b *BitSet) Reset() {
+func (b *bitSet) Reset() {
 	for i := 0; i < len(b.set); i++ {
 		b.set[i] &= 0
 	}
