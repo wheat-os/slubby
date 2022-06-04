@@ -56,7 +56,7 @@ func Request(self Stream, url string, callback CallbackFunc) (*HttpRequest, erro
 		return nil, err
 	}
 
-	return &HttpRequest{Request: req, Callback: callback, stream: self}, nil
+	return &HttpRequest{Request: req, Callback: callback, stream: self, Meta: make(map[string]interface{})}, nil
 }
 
 func BodyRequest(
@@ -71,7 +71,7 @@ func BodyRequest(
 		return nil, err
 	}
 
-	return &HttpRequest{Request: req, Callback: callback, stream: self}, nil
+	return &HttpRequest{Request: req, Callback: callback, stream: self, Meta: make(map[string]interface{})}, nil
 }
 
 func FormRequest(
@@ -87,7 +87,7 @@ func FormRequest(
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	return &HttpRequest{Request: req, stream: self}, nil
+	return &HttpRequest{Request: req, stream: self, Meta: map[string]interface{}{}}, nil
 }
 
 func JsonRequest(
@@ -107,7 +107,7 @@ func JsonRequest(
 	}
 	req.Header.Set("Content-Type", "application/json;charset=UTF-8")
 
-	return &HttpRequest{Request: req, stream: self}, nil
+	return &HttpRequest{Request: req, stream: self, Meta: make(map[string]interface{})}, nil
 }
 
 func (h *HttpRequest) UId() string {
