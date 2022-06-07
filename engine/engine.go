@@ -72,6 +72,9 @@ func (e *shortEngine) fromSpider(to stream.Stream) {
 		}
 	case stream.Item:
 		e.opt.eOutPutter.Put(data)
+
+	case *stream.StreamList:
+		e.objStream(to, e.fromSpider)
 	}
 }
 
