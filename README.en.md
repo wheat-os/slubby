@@ -1,6 +1,6 @@
 # slubby
 
-[中文文档](./README.en.md)
+[中文文档](./README.md)
 
 ### About Slubby
 
