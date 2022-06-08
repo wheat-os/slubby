@@ -56,3 +56,31 @@ func GroupPipline(pip ...Pipline) Pipline {
 		piplines: pip,
 	}
 }
+
+type shuntPipline struct {
+	pip      Pipline
+	itemName string
+}
+
+func (s *shuntPipline) OpenSpider() error {
+	return s.pip.OpenSpider()
+}
+
+func (s *shuntPipline) CloseSpider() error {
+	return s.pip.CloseSpider()
+}
+
+func (s *shuntPipline) ProcessItem(item stream.Item) stream.Item {
+	if s.itemName != item.IName() {
+		return item
+	}
+
+	return s.pip.ProcessItem(item)
+}
+
+func ShuntPIpline(iName string, pip Pipline) Pipline {
+	return &shuntPipline{
+		pip:      pip,
+		itemName: iName,
+	}
+}
