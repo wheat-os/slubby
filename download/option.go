@@ -47,6 +47,7 @@ func loadOption(opts ...optionFunc) *option {
 		//  -1 == Max
 		concurrentRequest: 8,
 		client:            http.DefaultClient,
+		retry:             2,
 	}
 
 	for _, opt := range opts {

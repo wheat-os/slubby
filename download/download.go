@@ -82,6 +82,10 @@ func (s *shortDownload) BeforeDownload(
 		return req, nil
 	}
 	m.Next()
+	if req.Retry == 0 {
+		req.Retry = s.opt.retry
+	}
+
 	return s.opt.Middleware.BeforeDownload(m, req)
 }
 
