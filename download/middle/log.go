@@ -20,7 +20,7 @@ func (l *logMiddle) AfterDownload(m *M, req *stream.HttpRequest, resp *stream.Ht
 }
 
 func (l *logMiddle) ProcessErr(m *M, req *stream.HttpRequest, err error) {
-	return
+	wlog.Errorf("<Request url: %s> download err, err: %s", req.URL.String(), err)
 }
 
 func LogMiddle() Middleware {

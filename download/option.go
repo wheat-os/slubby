@@ -23,6 +23,9 @@ type option struct {
 
 	// mid
 	middle.Middleware
+
+	// retry
+	retry int
 }
 
 // 初始化 poll
@@ -88,5 +91,14 @@ func WithTimeout(timeout time.Duration) optionFunc {
 func WithDownloadMiddle(mid middle.Middleware) optionFunc {
 	return func(opt *option) {
 		opt.Middleware = mid
+	}
+}
+
+func WithDownloadRetry(retry int) optionFunc {
+	if retry <= 0 {
+		retry = 2
+	}
+	return func(opt *option) {
+		opt.retry = retry
 	}
 }

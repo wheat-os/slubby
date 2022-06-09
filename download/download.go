@@ -49,7 +49,13 @@ func (s *shortDownload) Do(req *stream.HttpRequest) (*stream.HttpResponse, error
 			s.opt.limiter.Allow(req)
 		}
 
-		resp, err = s.client().Do(req.Request)
+		for req.Retry > 0 {
+			if resp, err = s.client().Do(req.Request); err == nil {
+				break
+			}
+			req.Retry -= 1
+		}
+
 		ch <- struct{}{}
 	})
 	<-ch
