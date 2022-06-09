@@ -40,6 +40,10 @@ func (b *BloomFilter) hash(content []byte, seed uint64) uint64 {
 // 是否通过 过滤器
 func (b *BloomFilter) Passage(req *stream.HttpRequest) (bool, error) {
 
+	if req.SkipFilter {
+		return true, nil
+	}
+
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
