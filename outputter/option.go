@@ -6,6 +6,7 @@ import (
 
 	"github.com/panjf2000/ants/v2"
 	"github.com/wheat-os/slubby/outputter/pipline"
+	"github.com/wheat-os/slubby/pkg/sundry"
 )
 
 type option struct {
@@ -18,7 +19,10 @@ type option struct {
 // creat and init Poll
 func (o *option) Poll() *ants.Pool {
 	o.once.Do(func() {
-		poll, err := ants.NewPool(o.threadCount)
+		poll, err := ants.NewPool(
+			o.threadCount,
+			ants.WithPanicHandler(sundry.AntsWlogHandlePanic),
+		)
 		if err != nil {
 			panic(err)
 		}
