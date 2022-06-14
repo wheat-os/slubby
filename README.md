@@ -28,7 +28,7 @@ slubby 是一个 基于 go 语言的、组件化的、高扩展性的、快速�
 
 ```shell
 # 这个方法会安装 slub 爬虫手脚架，我们将使用 slub 来创建 slubby 项目
-go install github/wheat-os/slub@latest
+go install github.com/wheat-os/slub@latest
 ```
 
 ### 快速开始

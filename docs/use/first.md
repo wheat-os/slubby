@@ -17,6 +17,16 @@
 go install github.com/wheat-os/slub@latest
 ```
 
+或者我们使用源代码编译安装
+```sh
+# 如果无法访问 github 可以用 gitee.com/wheat-os/slub
+git clone github.com/wheat-os/slub
+go build
+
+# windows 可以配置环境变量
+cp ./slub /usr/bin
+```
+
 国内开发者可能出现网络错误，可以设置 go mod 代理，[go proxy](https://goproxy.cn/) 。安装完成以后我们可以执行 `slub` 出现 slub 介绍页面表示 slub 工具安装成功。好的，我想你一定成功了对吧，这非常简单，我们现在进入下一步。
 
 ### 快速体验

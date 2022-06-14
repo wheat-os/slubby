@@ -28,7 +28,7 @@ slubby is a go-based, componentized, highly extensible, fast, crawler developmen
 ```shell
 # This method will install slub crawler scaffolding, and we will use slub to create slubby projects.
 
-go install github/wheat-os/slub@latest
+go install github.com/wheat-os/slub@latest
 ```
 
 ### Give it a try
