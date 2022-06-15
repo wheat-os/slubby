@@ -3,10 +3,13 @@ package stream
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"reflect"
+	"strings"
 	"testing"
 
+	"github.com/antchfx/htmlquery"
 	"github.com/stretchr/testify/require"
 )
 
@@ -159,4 +162,39 @@ func TestToBodyEncode(t *testing.T) {
 	encToBuf, err := EncodeHttpRequest(encReq)
 	require.NoError(t, err)
 	require.Equal(t, encBuf, encToBuf)
+}
+
+func TestHtmlXpath(t *testing.T) {
+	html := `
+<div class="nos">
+	<p>这几天在构建golang编写的web项目中, 关于dockerfile编写的一些总结</p>
+	<a href="https" ima="awd">qq</a> 
+</div>
+	`
+
+	node, err := htmlquery.Parse(strings.NewReader(html))
+	require.NoError(t, err)
+
+	res := htmlquery.Find(node, `//div[@class="nos"]/p/text()`)[0]
+	for _, v := range res.Attr {
+		fmt.Println(v.Key, v.Val)
+	}
+	fmt.Println(res.Data)
+
+}
+
+func TestResponseXpath(t *testing.T) {
+	html := `
+	<div class="nos">
+		<p>这几天在构建golang编写的web项目中, 关于dockerfile编写的一些总结</p>
+		<a href="https" ima="awd">qq</a> 
+	</div>
+		`
+	res := &HttpResponse{
+		Response: &http.Response{},
+	}
+	res.Body = ioutil.NopCloser(strings.NewReader(html))
+
+	xp := res.Xpath(`//div[@class="nos"]/a)`)[0]
+	require.Equal(t, xp.Attribute("href"), "https")
 }
