@@ -12,6 +12,10 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+
+	"github.com/antchfx/htmlquery"
+	"github.com/wheat-os/wlog"
+	"golang.org/x/net/html"
 )
 
 type CallbackFunc func(response *HttpResponse) (Stream, error)
@@ -256,4 +260,36 @@ func (h *HttpResponse) Bytes() []byte {
 func (h *HttpResponse) Text() string {
 	buf, _ := ioutil.ReadAll(h.Body)
 	return string(buf)
+}
+
+func (h *HttpResponse) Xpath(expr string) []*xpath {
+	node, err := htmlquery.Parse(h.Body)
+	if err != nil {
+		wlog.Error(err)
+		return nil
+	}
+
+	return (*xpath)(node).Xpath(expr)
+}
+
+type xpath html.Node
+
+func (x *xpath) Xpath(expr string) []*xpath {
+	nodes := htmlquery.Find((*html.Node)(x), expr)
+	xs := make([]*xpath, 0, len(nodes))
+	for _, v := range nodes {
+		xs = append(xs, (*xpath)(v))
+	}
+
+	return xs
+}
+
+func (x *xpath) Attribute(key string) string {
+	for _, attr := range x.Attr {
+		if attr.Key == key {
+			return attr.Val
+		}
+	}
+
+	return ""
 }
