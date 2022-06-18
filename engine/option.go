@@ -7,7 +7,7 @@ import (
 	"github.com/panjf2000/ants/v2"
 	"github.com/wheat-os/slubby/download"
 	"github.com/wheat-os/slubby/outputter"
-	"github.com/wheat-os/slubby/pkg/sundry"
+	"github.com/wheat-os/slubby/pkg/tools"
 	"github.com/wheat-os/slubby/scheduler"
 	"github.com/wheat-os/slubby/spider"
 	"github.com/wheat-os/wlog"
@@ -32,7 +32,7 @@ func (o *option) Poll() *ants.Pool {
 	o.once.Do(func() {
 		poll, err := ants.NewPool(
 			o.threadCount,
-			ants.WithPanicHandler(sundry.AntsWlogHandlePanic),
+			ants.WithPanicHandler(tools.AntsWlogHandlePanic),
 		)
 		if err != nil {
 			wlog.Panic(err)

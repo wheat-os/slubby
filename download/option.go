@@ -9,7 +9,7 @@ import (
 	"github.com/panjf2000/ants/v2"
 	"github.com/wheat-os/slubby/download/limiter"
 	"github.com/wheat-os/slubby/download/middle"
-	"github.com/wheat-os/slubby/pkg/sundry"
+	"github.com/wheat-os/slubby/pkg/tools"
 )
 
 type option struct {
@@ -34,7 +34,7 @@ func (o *option) Poll() *ants.Pool {
 	o.once.Do(func() {
 		poll, err := ants.NewPool(
 			o.concurrentRequest,
-			ants.WithPanicHandler(sundry.AntsWlogHandlePanic),
+			ants.WithPanicHandler(tools.AntsWlogHandlePanic),
 		)
 		if err != nil {
 			panic(err)

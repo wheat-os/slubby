@@ -1,4 +1,4 @@
-package sundry
+package tools
 
 import (
 	"bytes"
