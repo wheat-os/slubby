@@ -177,8 +177,10 @@ func (s *shortRequest) buildShortRequest(req *HttpRequest) error {
 // 升级请求
 func (s *shortRequest) ToHttpRequest() (*HttpRequest, error) {
 	stream, err := DecodeShortStream(s.SpiderInfo)
-	if err != nil {
-		return nil, err
+
+	// default stream, stream is nil
+	if err == InvalidEncodingErr {
+		stream = shortSpiderInfo("", "")
 	}
 
 	var body io.Reader = nil
