@@ -1,8 +1,6 @@
 package buffer
 
 import (
-	"bytes"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -13,30 +11,17 @@ import (
 )
 
 func Test_encodeDiskEntry(t *testing.T) {
-	et := &entry{
-		length:  5,
-		content: make([]byte, 5),
-	}
-
-	entryTo := &entry{
-		length:  11,
-		content: make([]byte, 11),
-	}
-
-	buf := bytes.NewBuffer(nil)
-	buf.Write(encodeDiskEntry(et))
-	buf.Write(encodeDiskEntry(entryTo))
-	require.Equal(t, buf.Len(), (8+verifiedSize)*2+5+11)
-
-	etQ, err := getDIskEntry(buf)
+	req, err := stream.Request(nil, "www.baidu.com", nil)
 	require.NoError(t, err)
-	require.Equal(t, et.length, etQ.length)
-	require.Equal(t, et.content, etQ.content)
-
-	etQ, err = getDIskEntry(buf)
+	ent, err := newDiskEntryByHttpRequest(req, 0)
 	require.NoError(t, err)
-	require.Equal(t, entryTo.length, etQ.length)
-	require.Equal(t, entryTo.content, etQ.content)
+
+	entBy := encodeDiskEntry(ent)
+	entTo, err := decodeDiskEntry(entBy)
+	require.NoError(t, err)
+
+	require.Equal(t, entTo, ent)
+
 }
 
 func TestFileWrite(t *testing.T) {
@@ -55,54 +40,54 @@ func TestFileWrite(t *testing.T) {
 	os.Remove("www.test")
 }
 
-func TestNewDiskQueue(t *testing.T) {
-	disk := NewDiskQueue("./.disk.unb")
-	req, err := stream.Request(nil, "www.baidu.com", nil)
-	require.NoError(t, err)
-	err = disk.Put(req)
-	require.NoError(t, err)
-	reqI, err := disk.Get()
-	require.NoError(t, err)
-	require.Equal(t, req.URL, reqI.URL)
+// func TestNewDiskQueue(t *testing.T) {
+// 	disk := NewDiskQueue("./.disk.unb")
+// 	req, err := stream.Request(nil, "www.baidu.com", nil)
+// 	require.NoError(t, err)
+// 	err = disk.Put(req)
+// 	require.NoError(t, err)
+// 	reqI, err := disk.Get()
+// 	require.NoError(t, err)
+// 	require.Equal(t, req.URL, reqI.URL)
 
-	for i := 0; i < 3000; i++ {
-		req, err := stream.Request(nil, fmt.Sprintf("www.test.com/%d", i), nil)
-		require.NoError(t, err)
-		err = disk.Put(req)
-		require.NoError(t, err)
-	}
+// 	for i := 0; i < 3000; i++ {
+// 		req, err := stream.Request(nil, fmt.Sprintf("www.test.com/%d", i), nil)
+// 		require.NoError(t, err)
+// 		err = disk.Put(req)
+// 		require.NoError(t, err)
+// 	}
 
-	for i := 0; i < 3000; i++ {
-		req, err := stream.Request(nil, fmt.Sprintf("www.test.com/%d", i), nil)
-		require.NoError(t, err)
-		reqI, err = disk.Get()
-		require.NoError(t, err)
+// 	for i := 0; i < 3000; i++ {
+// 		req, err := stream.Request(nil, fmt.Sprintf("www.test.com/%d", i), nil)
+// 		require.NoError(t, err)
+// 		reqI, err = disk.Get()
+// 		require.NoError(t, err)
 
-		require.Equal(t, req.URL, reqI.URL)
-	}
+// 		require.Equal(t, req.URL, reqI.URL)
+// 	}
 
-	_, err = disk.Get()
-	require.Error(t, err)
+// 	_, err = disk.Get()
+// 	require.Error(t, err)
 
-	disk.Close()
+// 	disk.Close()
 
-	os.Remove("./.disk.unb")
+// 	os.Remove("./.disk.unb")
 
-}
+// }
 
-func Test_diskQueue_encodeHeader(t *testing.T) {
-	n := diskQueue{
-		head:      0,
-		tail:      388,
-		beginSeek: 256,
-		length:    2,
-		factor:    6,
-	}
+// func Test_diskQueue_encodeHeader(t *testing.T) {
+// 	n := diskQueue{
+// 		head:      0,
+// 		tail:      388,
+// 		beginSeek: 256,
+// 		length:    2,
+// 		factor:    6,
+// 	}
 
-	p := diskQueue{}
+// 	p := diskQueue{}
 
-	buf := n.encodeHeader()
-	p.decodeHeader(buf)
+// 	buf := n.encodeHeader()
+// 	p.decodeHeader(buf)
 
-	require.Equal(t, &n, &p)
-}
+// 	require.Equal(t, &n, &p)
+// }
