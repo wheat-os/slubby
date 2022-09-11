@@ -5,6 +5,10 @@ import (
 	"encoding/binary"
 	"errors"
 	"hash/crc64"
+	"io"
+	"math"
+	"os"
+	"sync"
 
 	"github.com/wheat-os/slubby/pkg/tools"
 	"github.com/wheat-os/slubby/stream"
@@ -14,8 +18,6 @@ const (
 	basicEntrySize  = 8
 	entryMinSize    = basicEntrySize * 5
 	entryHeaderSize = basicEntrySize * 4
-
-	diskEntryFirstOff = 64 * basicEntrySize
 )
 
 var (
@@ -104,9 +106,178 @@ func newDiskEntryByHttpRequest(req *stream.HttpRequest, start uint64) (*diskEntr
 	return &diskEntry{start: start, end: end, length: length, content: reqBuf}, nil
 }
 
-type DiskQueue struct {
-	firstContentOff int
+const (
+	diskEntryFirstOff = 64 * basicEntrySize
+	headOff           = 3 * basicEntrySize
+)
+
+var (
+	errSetEntryToDisk = errors.New("an error occurred in entering the disk")
+	errDiskQueueEmpty = errors.New("the current disk queue is empty")
+	errParseDiskEntry = errors.New("parses the entry error")
+)
+
+type diskQueue struct {
+	firstContentOff uint64
+	length          uint64
 
 	head *diskEntry
 	tail *diskEntry
+
+	ver []byte
+
+	mu sync.Mutex
+
+	fs *os.File
+}
+
+func (d *diskQueue) updateEntryNext(ent *diskEntry) {
+	d.fs.Seek(int64(ent.start+2*basicEntrySize), io.SeekStart)
+
+	uintByte := make([]byte, basicEntrySize)
+	binary.BigEndian.PutUint64(uintByte, ent.next)
+	d.fs.Write(uintByte)
+}
+
+func (d *diskQueue) setEntry(ent *diskEntry) error {
+	d.fs.Seek(int64(ent.start), io.SeekStart)
+	buf := encodeDiskEntry(ent)
+	if n, _ := d.fs.Write(buf); n != int(ent.end-ent.start) {
+		return errEntryIllegal
+	}
+
+	return nil
+}
+
+func (d *diskQueue) readEntryByOff(start uint64) (*diskEntry, error) {
+	d.fs.Seek(int64(start), io.SeekStart)
+	head := make([]byte, entryHeaderSize)
+	entStart := binary.BigEndian.Uint64(head[0*basicEntrySize : basicEntrySize*1])
+	entEnd := binary.BigEndian.Uint64(head[1*basicEntrySize : basicEntrySize*2])
+
+	if entStart != start {
+		return nil, errParseDiskEntry
+	}
+
+	d.length -= 1
+
+	body := make([]byte, entEnd-entStart)
+	d.fs.Read(body)
+
+	return decodeDiskEntry(append(head, body...))
+}
+
+func (d *diskQueue) flashHeader() {
+	buf := bytes.NewBuffer(nil)
+	uintByte := make([]byte, basicEntrySize)
+
+	// firstContentOff
+	binary.BigEndian.PutUint64(uintByte, d.firstContentOff)
+	buf.Write(uintByte)
+
+	// length
+	binary.BigEndian.PutUint64(uintByte, d.length)
+	buf.Write(uintByte)
+
+	buf.Write(encodeDiskEntry(d.head))
+	buf.Write(encodeDiskEntry(d.tail))
+
+	crc := crc64.New(crc64.MakeTable(basicEntrySize))
+	crc.Write(buf.Bytes())
+
+}
+
+// 请求逻辑
+func (d *diskQueue) Put(req *stream.HttpRequest) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	ent, err := newDiskEntryByHttpRequest(req, d.tail.end)
+	if err != nil {
+		return err
+	}
+
+	if err = d.setEntry(ent); err != nil {
+		return err
+	}
+
+	// set tail
+	d.tail.next = d.tail.end
+	d.updateEntryNext(d.tail)
+
+	d.length += 1
+	d.tail = ent
+
+	return nil
+}
+
+func (d *diskQueue) Get() (*stream.HttpRequest, error) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	if d.length <= 0 || d.head.next == 0 {
+		return nil, errDiskQueueEmpty
+	}
+
+	ent, err := d.readEntryByOff(d.head.next)
+	if err != nil {
+		return nil, err
+	}
+
+	d.head = ent
+	d.length -= 1
+	return stream.DecodeHttpRequest(ent.content)
+}
+
+func (d *diskQueue) Size() int {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	return int(d.length)
+}
+
+func (d *diskQueue) Cap() int {
+	return math.MaxInt
+}
+
+func (d *diskQueue) Close() error {
+	panic("not implemented") // TODO: Implement
+}
+
+func DiskQueue(file string) Buffer {
+	// append
+	if _, err := os.Stat(file); err != nil {
+		fs, err := os.Create(file)
+		tools.WlogPanicErr(err)
+		headEntry := &diskEntry{
+			start:   diskEntryFirstOff,
+			end:     diskEntryFirstOff,
+			next:    diskEntryFirstOff,
+			length:  0,
+			content: nil,
+			ver:     nil,
+		}
+
+		tailEntry := &diskEntry{
+			start:   diskEntryFirstOff,
+			end:     diskEntryFirstOff,
+			next:    diskEntryFirstOff,
+			length:  0,
+			content: nil,
+			ver:     nil,
+		}
+
+		return &diskQueue{
+			firstContentOff: diskEntryFirstOff,
+			length:          0,
+			fs:              fs,
+			head:            headEntry,
+			tail:            tailEntry,
+		}
+	}
+
+	// fs, err := os.OpenFile(file, os.O_RDWR, 0777)
+	// tools.WlogPanicErr(err)
+
+	// // read header
+	return nil
 }

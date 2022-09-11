@@ -90,8 +90,9 @@ func FormRequest(
 	if err != nil {
 		return nil, err
 	}
+
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	return &HttpRequest{Request: req, stream: self, Meta: map[string]interface{}{}}, nil
+	return &HttpRequest{Request: req, stream: self, Meta: map[string]interface{}{}, Callback: callback}, nil
 }
 
 func JsonRequest(
@@ -111,7 +112,7 @@ func JsonRequest(
 	}
 	req.Header.Set("Content-Type", "application/json;charset=UTF-8")
 
-	return &HttpRequest{Request: req, stream: self, Meta: make(map[string]interface{})}, nil
+	return &HttpRequest{Request: req, stream: self, Meta: make(map[string]interface{}), Callback: callback}, nil
 }
 
 func (h *HttpRequest) UId() string {

@@ -26,3 +26,11 @@ func AntsWlogHandlePanic(err interface{}) {
 
 	wlog.Error(buf.String())
 }
+
+func WlogPanicErr(v interface{}) {
+	if v == nil {
+		return
+	}
+
+	wlog.Panic(v)
+}

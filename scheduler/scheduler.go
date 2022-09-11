@@ -39,6 +39,7 @@ func (s *shortScheduler) Put(req *stream.HttpRequest) error {
 
 func (s *shortScheduler) Get() (*stream.HttpRequest, error) { return s.opt.buffer.Get() }
 
+// RecvCtxCancel
 func (s *shortScheduler) RecvCtxCancel(ctx context.Context) <-chan *stream.HttpRequest {
 
 	ch := make(chan *stream.HttpRequest)
