@@ -95,6 +95,9 @@ func (s *StreamResponse) Write(p []byte) (n int, err error) {
 
 // Close 关闭 response
 func (s *StreamResponse) Close() error {
+	if s.Response != nil || s.Response.Body == nil {
+		return nil
+	}
 	return s.Response.Body.Close()
 }
 
