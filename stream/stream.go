@@ -50,7 +50,7 @@ func NewTargetCover(from, to Cover) TargetCover {
 }
 
 type Stream interface {
-	io.ReadWriteCloser
+	io.Closer
 	encoding.BinaryMarshaler
 	FromToCover
 }
