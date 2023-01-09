@@ -6,6 +6,16 @@ type Item struct {
 	TargetCover
 }
 
+func (i *Item) Err() error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (i *Item) SetErr(err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 // Close 关闭 item， 默认为空
 func (i *Item) Close() error {
 	return nil
