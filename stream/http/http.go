@@ -10,12 +10,14 @@ import (
 )
 
 var (
-	ErrNotStreamBody = errors.New("this http request stream not have body")
+	ErrNotStreamBody             = errors.New("this http request stream not have body")
+	ErrNotExistHttpStreamRequest = errors.New("the input stream is not http stream request")
 )
 
 type StreamRequest struct {
 	stream.TargetCover
 	Request *http.Request
+	stream.Meta
 }
 
 // Read 读取 http request body 的消息
@@ -64,6 +66,7 @@ func (s *StreamRequest) MarshalBinary() (data []byte, err error) {
 type StreamResponse struct {
 	stream.TargetCover
 	Response *http.Response
+	stream.Meta
 }
 
 // Read 读取 response body 消息
@@ -104,4 +107,9 @@ func (s *StreamResponse) Close() error {
 // MarshalBinary 编码 response
 func (s *StreamResponse) MarshalBinary() (data []byte, err error) {
 	return httputil.DumpResponse(s.Response, true)
+}
+
+// NewHttpResponse 新创建 http response
+func NewHttpResponse(resp *http.Response) (*StreamResponse, error) {
+	return &StreamResponse{Response: resp}, nil
 }
