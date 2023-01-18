@@ -1,6 +1,9 @@
 package download
 
-import "github.com/wheat-os/slubby/v2/stream"
+import (
+	"github.com/wheat-os/slubby/v2/stream"
+	"github.com/wheat-os/slubby/v2/stream/buffer"
+)
 
 type OptFunc func(opt *SlubbyComponent)
 
@@ -12,6 +15,10 @@ func withRetry(retryNum int, to stream.Cover) OptFunc {
 	const key retryContentKey = "slubby.stream.httpdownload.retry"
 	return func(opt *SlubbyComponent) {
 		opt.isRetryFunc = func(req stream.Stream, resp stream.Stream) (stream.Cover, bool) {
+			if retryNum <= 0 {
+				return stream.UnknownCover, false
+			}
+
 			if req == nil {
 				return stream.UnknownCover, false
 			}
@@ -60,5 +67,19 @@ func WithTransport(transport RoundTripper) OptFunc {
 func WithForwardCover(cover stream.Cover) OptFunc {
 	return func(opt *SlubbyComponent) {
 		opt.forwardCover = cover
+	}
+}
+
+// WithDownloadBuffer 定义下载器缓冲区
+func WithDownloadBuffer(buffer buffer.StreamBuffer) OptFunc {
+	return func(opt *SlubbyComponent) {
+		opt.buffer = buffer
+	}
+}
+
+// WithDownloadProcess 设置下载器进程数量
+func WithDownloadProcess(process int) OptFunc {
+	return func(opt *SlubbyComponent) {
+		opt.process = process
 	}
 }

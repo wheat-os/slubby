@@ -3,6 +3,12 @@ package download
 import (
 	"context"
 	"errors"
+	"fmt"
+	"net/http"
+	"runtime"
+	"sync"
+
+	"github.com/wheat-os/slubby/v2/engine"
 	"github.com/wheat-os/slubby/v2/stream"
 	"github.com/wheat-os/slubby/v2/stream/buffer"
 )
@@ -18,10 +24,13 @@ type SlubbyComponent struct {
 	isRetryFunc  func(req stream.Stream, resp stream.Stream) (stream.Cover, bool)
 	forwardCover stream.Cover // 默认转发组件
 
-	buffer buffer.StreamBuffer
+	buffer buffer.StreamBuffer // 下载器缓冲区
+	recv   chan stream.Stream  // 通信队列
 
-	recv    chan stream.Stream
+	process int // 下载器线程数
+
 	isClose bool
+	cancel  func()
 }
 
 func (h *SlubbyComponent) pushRequest(data stream.Stream) error {
@@ -65,7 +74,50 @@ func (h *SlubbyComponent) downTripper(req stream.Stream) (stream.Stream, stream.
 	}
 }
 
-// working 工作流
+// do 工作流
+func (h *SlubbyComponent) do() {
+	defer func() {
+		if err := recover(); err != nil {
+			h.recv <- stream.FromError(stream.DownloadCover, fmt.Errorf("%v", err))
+		}
+	}()
+
+	if h.Size() == 0 {
+		return
+	}
+
+	req, err := h.pullRequest()
+	switch err {
+	case nil:
+		// 忽略读取错误
+	case buffer.ErrStreamBufferIsEmpty:
+		return
+	default:
+		h.recv <- stream.FromError(stream.DownloadCover, err)
+		return
+	}
+
+	// 非下载器处理流处理
+	if req.To() != stream.DownloadCover {
+		req.SetForm(stream.DownloadCover)
+		h.recv <- req
+		return
+	}
+
+	// 执行 downTripper
+	fromStream, cover, err := h.downTripper(req)
+	if err != nil {
+		h.recv <- stream.FromError(stream.DownloadCover, err)
+		return
+	}
+
+	// 发送 cover
+	fromStream.SetForm(stream.DownloadCover)
+	fromStream.SetTo(cover)
+	h.recv <- fromStream
+}
+
+// working 工作方法
 func (h *SlubbyComponent) working(ctx context.Context) {
 	for {
 		// 检查关闭
@@ -75,39 +127,7 @@ func (h *SlubbyComponent) working(ctx context.Context) {
 		default:
 		}
 
-		if h.Size() == 0 {
-			continue
-		}
-
-		req, err := h.pullRequest()
-		switch err {
-		case nil:
-			// 忽略读取错误
-		case buffer.ErrStreamBufferIsEmpty:
-			continue
-		default:
-			h.recv <- stream.FromError(stream.DownloadCover, err)
-			continue
-		}
-
-		// 非下载器处理流处理
-		if req.To() != stream.DownloadCover {
-			req.SetForm(stream.DownloadCover)
-			h.recv <- req
-			continue
-		}
-
-		// 执行 downTripper
-		fromStream, cover, err := h.downTripper(req)
-		if err != nil {
-			h.recv <- stream.FromError(stream.DownloadCover, err)
-			continue
-		}
-
-		// 发送 cover
-		fromStream.SetForm(stream.DownloadCover)
-		fromStream.SetTo(cover)
-		h.recv <- fromStream
+		h.do()
 	}
 }
 
@@ -123,6 +143,52 @@ func (h *SlubbyComponent) BackStream() <-chan stream.Stream {
 
 // Close 关闭下载器
 func (h *SlubbyComponent) Close() error {
-	//TODO implement me
-	panic("implement me")
+	h.isClose = true
+	h.cancel()
+	return nil
+}
+
+// NewSlubbyDownload 创建一个默认的 slubby 下载器
+func NewSlubbyDownload(opts ...OptFunc) engine.SendAndReceiveComponent {
+	var defaultProcessNum = runtime.NumCPU()
+
+	component := &SlubbyComponent{recv: make(chan stream.Stream)}
+
+	initOption := []OptFunc{
+		WithHttpClientTransport(&http.Client{}),                     // 默认使用默认的 HTTP 下载器
+		WithDownloadProcess(defaultProcessNum),                      // 默认使用 CPU 数量的进程数
+		WithDirectRetry(0),                                          // 默认不执行重试
+		WithForwardCover(stream.SpiderCover),                        // 默认下载成功后转发 spider 处理
+		WithDownloadBuffer(buffer.NewChanBuffer(defaultProcessNum)), // 默认使用 chan 缓存队列
+	}
+
+	initOption = append(initOption, opts...)
+	for _, optFunc := range initOption {
+		optFunc(component)
+	}
+
+	// 运行 slubby download
+	group := sync.WaitGroup{}
+	cancelFunc := make([]func(), 0, component.process)
+	for i := 0; i < component.process; i++ {
+		ctx, cancel := context.WithCancel(context.TODO())
+
+		// 执行 download 进程
+		group.Add(1)
+		go func(c context.Context) {
+			component.working(c)
+			group.Done()
+		}(ctx)
+		cancelFunc = append(cancelFunc, cancel)
+	}
+
+	// 生成关闭方法
+	component.cancel = func() {
+		for _, cancel := range cancelFunc {
+			cancel()
+		}
+		group.Wait()
+	}
+
+	return component
 }
