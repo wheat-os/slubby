@@ -42,7 +42,7 @@ func WithDirectRetry(retryNum int) OptFunc {
 	return withRetry(retryNum, stream.DownloadCover)
 }
 
-// WithBackSchedulerRetry 回调度器重试
+// WithBackSchedulerRetry 回调度器重试方案
 func WithBackSchedulerRetry(retryNum int) OptFunc {
 	return withRetry(retryNum, stream.SchedulerCover)
 }
