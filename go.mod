@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/stretchr/testify v1.8.1
 	github.com/wheat-os/wlog v1.0.2
+	golang.org/x/time v0.3.0
 )
 
 require (
