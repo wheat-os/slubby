@@ -1,9 +1,10 @@
 package download
 
 import (
+	"net/http"
+
 	"github.com/wheat-os/slubby/v2/stream"
 	sHttp "github.com/wheat-os/slubby/v2/stream/http"
-	"net/http"
 )
 
 func withHttpClientTransport(client *http.Client) OptFunc {
@@ -20,7 +21,8 @@ func withHttpClientTransport(client *http.Client) OptFunc {
 		if err != nil {
 			return nil, err
 		}
-		return sHttp.NewHttpResponse(resp)
+
+		return sHttp.NewHttpResponse(resp, inStream.ReplaceCtx(nil))
 	}
 
 	return func(opt *SlubbyComponent) {

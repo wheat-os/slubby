@@ -16,7 +16,7 @@ type StreamResponse struct {
 
 // Read 读取 response body 消息
 func (s *StreamResponse) Read(p []byte) (n int, err error) {
-	if s.Response != nil || s.Response.Body == nil {
+	if s.Response == nil || s.Response.Body == nil {
 		return 0, ErrNotStreamBody
 	}
 	return s.Response.Body.Read(p)
@@ -24,7 +24,7 @@ func (s *StreamResponse) Read(p []byte) (n int, err error) {
 
 // Write 写入 response body 消息
 func (s *StreamResponse) Write(p []byte) (n int, err error) {
-	if s.Response != nil || s.Response.Body == nil {
+	if s.Response == nil || s.Response.Body == nil {
 		return 0, ErrNotStreamBody
 	}
 	// 可用的 http body
@@ -59,6 +59,9 @@ func (s *StreamResponse) ReplaceCtx(ctx stream.Context) stream.Context {
 }
 
 // NewHttpResponse 新创建 http response
-func NewHttpResponse(resp *http.Response) (*StreamResponse, error) {
-	return &StreamResponse{Response: resp}, nil
+func NewHttpResponse(resp *http.Response, meta stream.Context) (*StreamResponse, error) {
+	if meta == nil {
+		meta = &stream.Meta{}
+	}
+	return &StreamResponse{Response: resp, Context: meta}, nil
 }

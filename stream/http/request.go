@@ -8,6 +8,18 @@ import (
 	"github.com/wheat-os/slubby/v2/stream"
 )
 
+const (
+	MethodGet     = "GET"
+	MethodHead    = "HEAD"
+	MethodPost    = "POST"
+	MethodPut     = "PUT"
+	MethodPatch   = "PATCH" // RFC 5789
+	MethodDelete  = "DELETE"
+	MethodConnect = "CONNECT"
+	MethodOptions = "OPTIONS"
+	MethodTrace   = "TRACE"
+)
+
 type StreamRequest struct {
 	stream.TargetCover
 	Request *http.Request
@@ -64,4 +76,14 @@ func (s *StreamRequest) ReplaceCtx(ctx stream.Context) stream.Context {
 // NewHttpRequest 创建 http request
 func NewHttpRequest(req *http.Request) (*StreamRequest, error) {
 	return &StreamRequest{Request: req, Context: &stream.Meta{}}, nil
+}
+
+// NewRequest 创建 http request
+func NewRequest(method string, url string, body io.Reader) (*StreamRequest, error) {
+	req, err := http.NewRequest(method, url, body)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewHttpRequest(req)
 }
