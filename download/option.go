@@ -7,8 +7,6 @@ import (
 
 type OptFunc func(opt *SlubbyComponent)
 
-type RoundTripper func(inStream stream.Stream) (stream.Stream, error)
-
 type retryContentKey string
 
 func withRetry(retryNum int, to stream.Cover) OptFunc {

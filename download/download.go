@@ -17,6 +17,8 @@ var (
 	ErrRequestBufferIsClose = errors.New("request buffer is close")
 )
 
+type RoundTripper func(inStream stream.Stream) (stream.Stream, error)
+
 type SlubbyComponent struct {
 	roundTripper RoundTripper
 	// 返回 cover 以及 bool, 标识是否重试, 以及转 component 处理,
@@ -24,8 +26,9 @@ type SlubbyComponent struct {
 	isRetryFunc  func(req stream.Stream, resp stream.Stream) (stream.Cover, bool)
 	forwardCover stream.Cover // 默认转发组件
 
-	buffer buffer.StreamBuffer // 下载器缓冲区
-	recv   chan stream.Stream  // 通信队列
+	buffer    buffer.StreamBuffer             // 下载器缓冲区
+	recv      chan stream.Stream              // 通信队列
+	rateLimit func(ctx context.Context) error // 下载器限制器
 
 	process int // 下载器线程数
 
@@ -75,7 +78,7 @@ func (h *SlubbyComponent) downTripper(req stream.Stream) (stream.Stream, stream.
 }
 
 // do 工作流
-func (h *SlubbyComponent) do() {
+func (h *SlubbyComponent) do(ctx context.Context) {
 	defer func() {
 		if err := recover(); err != nil {
 			h.recv <- stream.FromError(stream.DownloadCover, fmt.Errorf("%v", err))
@@ -94,6 +97,15 @@ func (h *SlubbyComponent) do() {
 		return
 	default:
 		h.recv <- stream.FromError(stream.DownloadCover, err)
+		return
+	}
+
+	// 执行限流器
+	if err := h.rateLimit(ctx); err != nil {
+		h.recv <- stream.Error(err)
+		req.SetForm(stream.DownloadCover)
+		req.SetTo(stream.SchedulerCover)
+		h.recv <- req
 		return
 	}
 
@@ -127,7 +139,7 @@ func (h *SlubbyComponent) working(ctx context.Context) {
 		default:
 		}
 
-		h.do()
+		h.do(ctx)
 	}
 }
 
@@ -160,6 +172,7 @@ func NewSlubbyDownload(opts ...OptFunc) engine.SendAndReceiveComponent {
 		WithDirectRetry(0),                                          // 默认不执行重试
 		WithForwardCover(stream.SpiderCover),                        // 默认下载成功后转发 spider 处理
 		WithDownloadBuffer(buffer.NewChanBuffer(defaultProcessNum)), // 默认使用 chan 缓存队列
+		WithTokenBucketLimit(-1, 1),                                 // 默认不启用限制器
 	}
 
 	initOption = append(initOption, opts...)
