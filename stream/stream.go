@@ -1,7 +1,6 @@
 package stream
 
 import (
-	"encoding"
 	"io"
 )
 
@@ -52,15 +51,17 @@ func NewTargetCover(from, to Cover) TargetCover {
 
 type Stream interface {
 	io.Closer
-	encoding.BinaryMarshaler
 	FromToCover
 	Context
+
+	// ReplaceCtx 替换或者获取 stream 的上下文对象, 传递为空时不发生替换, 返回旧的上下文
+	ReplaceCtx(ctx Context) Context
 }
 
 // BackgroundStream 默认 stream
 type BackgroundStream struct {
 	TargetCover
-	Meta
+	Context
 }
 
 func (b *BackgroundStream) Close() error {
@@ -71,14 +72,25 @@ func (b *BackgroundStream) MarshalBinary() (data []byte, err error) {
 	return nil, nil
 }
 
+// ReplaceCtx 上下文替换方案
+func (b *BackgroundStream) ReplaceCtx(ctx Context) Context {
+	vtr := b.Context
+	if ctx != nil {
+		b.Context = vtr
+	}
+	return vtr
+}
+
 // Background 获取默认 stream
 func Background() Stream {
-	return &BackgroundStream{}
+	return &BackgroundStream{Context: &Meta{}}
 }
 
 // Error 携带错误的 stream
 func Error(err error) Stream {
-	return &BackgroundStream{}
+	errStream := Background()
+	errStream.SetErr(err)
+	return errStream
 }
 
 // FromError 指定来源错误
