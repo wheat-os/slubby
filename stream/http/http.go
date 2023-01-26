@@ -31,8 +31,16 @@ type lowerEnc struct {
 	Cover stream.TargetCover
 }
 
+type httpEncoderMetaKey string
+
 // StreamEncode 实现流编码方法
 func (s *StreamEncoder) StreamEncode(stm stream.Stream) ([]byte, error) {
+	const encoderKey httpEncoderMetaKey = "stream.http.encode.cache.byte"
+
+	if b, ok := stm.GetMeta(encoderKey).([]byte); ok {
+		return b, nil
+	}
+
 	entry := &lowerEnc{}
 	switch v := stm.(type) {
 	// stream http request
@@ -57,7 +65,10 @@ func (s *StreamEncoder) StreamEncode(stm stream.Stream) ([]byte, error) {
 		return nil, err
 	}
 
-	return buf.Bytes(), nil
+	b := buf.Bytes()
+	stm.SetMeta(encoderKey, b)
+
+	return b, nil
 }
 
 // StreamDecode 重分离的 binary 中解析流信息

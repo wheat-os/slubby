@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"runtime"
 	"sync"
+	"time"
 
 	"github.com/wheat-os/slubby/v2/engine"
 	"github.com/wheat-os/slubby/v2/stream"
@@ -52,7 +53,7 @@ func (h *SlubbyDownload) Size() int {
 	return h.buffer.Len()
 }
 
-// downTripper 实现请求的首发方法
+// downTripper 实现请求的下载方法
 func (h *SlubbyDownload) downTripper(req stream.Stream) (stream.Stream, stream.Cover, error) {
 	for {
 		resp, err := h.roundTripper(req)
@@ -93,7 +94,7 @@ func (h *SlubbyDownload) do(ctx context.Context) {
 	switch err {
 	case nil:
 		// 忽略读取错误
-	case buffer.ErrStreamBufferIsEmpty:
+	case buffer.ErrStreamBufferIsEmpty, buffer.ErrStreamContentIsCancel:
 		return
 	default:
 		h.recv <- stream.FromError(stream.DownloadCover, err)
@@ -143,6 +144,7 @@ func (h *SlubbyDownload) working(ctx context.Context) {
 	}
 }
 
+// run 组件创建时运行
 func (h *SlubbyDownload) run() func() {
 	// 运行 slubby download
 	group := sync.WaitGroup{}
@@ -183,6 +185,31 @@ func (h *SlubbyDownload) BackStream() <-chan stream.Stream {
 func (h *SlubbyDownload) Close() error {
 	h.isClose = true
 	h.cancel()
+
+	// 缓冲区中剩余流全部回调度器, 最多处理 3 秒
+	ctx, cancel := context.WithTimeout(context.TODO(), 3*time.Second)
+	for {
+		if h.buffer.Len() == 0 {
+			break
+		}
+
+		stm, err := h.pullRequest(ctx)
+		if err != nil {
+			break
+		}
+
+		// 标识回溯来源
+		stm.SetForm(stream.DownloadCover)
+		h.recv <- stm
+	}
+	cancel()
+
+	return nil
+}
+
+// Finish 结束整个下载器
+func (h *SlubbyDownload) Finish() error {
+	close(h.recv)
 	return nil
 }
 
@@ -206,9 +233,8 @@ func NewSlubbyDownload(opts ...Option) engine.SendAndReceiveComponent {
 		optFunc(component)
 	}
 
-	workingCancel := component.run()
-
 	// 写入关闭函数
+	workingCancel := component.run()
 	component.cancel = func() {
 		workingCancel()
 	}

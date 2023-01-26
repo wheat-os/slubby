@@ -1,7 +1,9 @@
 package buffer
 
 import (
+	"context"
 	"errors"
+
 	"github.com/wheat-os/slubby/v2/pkg/buffer"
 	"github.com/wheat-os/slubby/v2/stream"
 )
@@ -10,14 +12,15 @@ var (
 	ErrStreamBufferIsEmpty    = errors.New("this stream buffer is empty")
 	ErrStreamBufferIsFull     = errors.New("this stream buffer is full")
 	ErrStreamAssertionFailure = errors.New("this entry parse to stream err")
+	ErrStreamContentIsCancel  = errors.New("this stream buffer context is cancel")
 )
 
 // StreamBuffer 下载器缓冲区组件，应该保证线程安全
 type StreamBuffer interface {
 	Len() int
 	Cap() int
-	PutStream(data stream.Stream) error
-	GetStream() (stream.Stream, error)
+	PutStream(ctx context.Context, data stream.Stream) error
+	GetStream(ctx context.Context) (stream.Stream, error)
 }
 
 type ListBuffer struct {
@@ -32,33 +35,38 @@ func (l *ListBuffer) Cap() int {
 	return l.list.Cap()
 }
 
-func (l *ListBuffer) PutStream(data stream.Stream) error {
+func (l *ListBuffer) PutStream(ctx context.Context, data stream.Stream) error {
 	err := l.list.Put(data)
 
 	switch err {
 	case nil:
 		return nil
-	case buffer.ErrBufferIsEmpty:
-		return ErrStreamBufferIsEmpty
+	case buffer.ErrBufferIsFull:
+		return ErrStreamBufferIsFull
+	case buffer.ErrBufferContextCancel:
+		return ErrStreamContentIsCancel
 	default:
 		return err
 	}
 }
 
-func (l *ListBuffer) GetStream() (stream.Stream, error) {
+func (l *ListBuffer) GetStream(ctx context.Context) (stream.Stream, error) {
 	entry, err := l.list.Get()
-	stm, ok := entry.(stream.Stream)
-	if !ok {
-		return nil, ErrStreamAssertionFailure
-	}
 
 	switch err {
 	case nil:
+		stm, ok := entry.(stream.Stream)
+		if !ok {
+			return nil, ErrStreamAssertionFailure
+		}
 		return stm, nil
-	case buffer.ErrBufferIsFull:
-		return nil, ErrStreamBufferIsFull
+
+	case buffer.ErrBufferIsEmpty:
+		return nil, ErrStreamBufferIsEmpty
+	case buffer.ErrBufferContextCancel:
+		return nil, ErrStreamContentIsCancel
 	default:
-		return stm, err
+		return nil, err
 	}
 }
 
@@ -77,14 +85,23 @@ func (c ChanBuffer) Cap() int {
 	return cap(c)
 }
 
-func (c ChanBuffer) PutStream(data stream.Stream) error {
-	c <- data
+func (c ChanBuffer) PutStream(ctx context.Context, data stream.Stream) error {
+	select {
+	case c <- data:
+	case <-ctx.Done():
+		return ErrStreamContentIsCancel
+	}
+
 	return nil
 }
 
-func (c ChanBuffer) GetStream() (stream.Stream, error) {
-	stm := <-c
-	return stm, nil
+func (c ChanBuffer) GetStream(ctx context.Context) (stream.Stream, error) {
+	select {
+	case <-ctx.Done():
+		return nil, ErrStreamContentIsCancel
+	case stm := <-c:
+		return stm, nil
+	}
 }
 
 // NewChanBuffer 创建使用 go chan 实现的 stream 缓冲区

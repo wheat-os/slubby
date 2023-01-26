@@ -2,15 +2,17 @@ package buffer
 
 import (
 	"container/list"
+	"context"
 	"errors"
 	"sync"
 	"time"
 )
 
 var (
-	ErrBufferIsEmpty = errors.New("this buffer is empty")
-	ErrBufferIsFull  = errors.New("this buffer is full")
-	ErrBufferTimeout = errors.New("buffer option is timeout")
+	ErrBufferIsEmpty       = errors.New("this buffer is empty")
+	ErrBufferIsFull        = errors.New("this buffer is full")
+	ErrBufferTimeout       = errors.New("buffer option is timeout")
+	ErrBufferContextCancel = errors.New("context cancel")
 )
 
 type ListBuffer struct {
@@ -61,11 +63,17 @@ func (l *ListBuffer) Put(val any) error {
 }
 
 // WaitPut 阻塞推送
-func (l *ListBuffer) WaitPut(val any) error {
+func (l *ListBuffer) WaitPut(ctx context.Context, val any) error {
 	l.cond.L.Lock()
 	defer l.cond.L.Unlock()
 	// 等待
 	for l.Len() >= l.Cap() {
+		select {
+		case <-ctx.Done():
+			return ErrBufferContextCancel
+		default:
+		}
+
 		l.cond.Signal()
 		l.cond.Wait()
 	}
@@ -75,10 +83,16 @@ func (l *ListBuffer) WaitPut(val any) error {
 }
 
 // WaitGet 阻塞读取
-func (l *ListBuffer) WaitGet() (any, error) {
+func (l *ListBuffer) WaitGet(ctx context.Context) (any, error) {
 	l.cond.L.Lock()
 	defer l.cond.L.Unlock()
 	for l.Len() == 0 {
+		select {
+		case <-ctx.Done():
+			return nil, ErrBufferContextCancel
+		default:
+		}
+
 		l.cond.Signal()
 		l.cond.Wait()
 	}
@@ -89,7 +103,7 @@ func (l *ListBuffer) WaitGet() (any, error) {
 }
 
 // TimeoutGet 超时读取方法
-func (l *ListBuffer) TimeoutGet(timeout time.Duration) (any, error) {
+func (l *ListBuffer) TimeoutGet(ctx context.Context, timeout time.Duration) (any, error) {
 	l.cond.L.Lock()
 	defer l.cond.L.Unlock()
 	tk := time.NewTimer(timeout)
@@ -99,6 +113,8 @@ func (l *ListBuffer) TimeoutGet(timeout time.Duration) (any, error) {
 		select {
 		case <-tk.C:
 			return nil, ErrBufferTimeout
+		case <-ctx.Done():
+			return nil, ErrBufferContextCancel
 		default:
 		}
 
@@ -112,7 +128,7 @@ func (l *ListBuffer) TimeoutGet(timeout time.Duration) (any, error) {
 }
 
 // TimeoutPut 超时推送
-func (l *ListBuffer) TimeoutPut(val any, timeout time.Duration) error {
+func (l *ListBuffer) TimeoutPut(ctx context.Context, val any, timeout time.Duration) error {
 	l.cond.L.Lock()
 	defer l.cond.L.Unlock()
 
@@ -124,6 +140,8 @@ func (l *ListBuffer) TimeoutPut(val any, timeout time.Duration) error {
 		select {
 		case <-tk.C:
 			return ErrBufferTimeout
+		case <-ctx.Done():
+			return ErrBufferContextCancel
 		default:
 		}
 
