@@ -1,22 +1,37 @@
 package scheduler
 
 import (
+	"context"
 	"errors"
+	"fmt"
+	"github.com/wheat-os/slubby/v2/engine"
 	"github.com/wheat-os/slubby/v2/stream"
 	"github.com/wheat-os/slubby/v2/stream/buffer"
+	"io"
+	"sync"
 )
 
 var (
-	ErrSchedulerIsClose = errors.New("request buffer is close")
+	ErrSchedulerIsClose = errors.New("scheduler is close")
 )
 
-type SlubbyScheduler struct {
-	buffer     buffer.StreamBuffer          // 调度器缓冲区
-	passFilter func(stm stream.Stream) bool // 过滤器机制，是否通过过滤器
+// StreamFilter 流过滤器
+type StreamFilter interface {
+	PassFilter(b []byte) bool
+	io.Closer
+}
 
-	recv chan stream.Stream
+type SlubbyScheduler struct {
+	buffer       buffer.StreamBuffer // 调度器缓冲区
+	filter       StreamFilter        // 过滤器机制
+	enc          stream.Encoder      // 流编码器
+	forwardCover stream.Cover        // 默认转发组件
+
+	recv    chan stream.Stream
+	process int // 执行线程数
 
 	isClose bool
+	cancel  func()
 }
 
 func (s *SlubbyScheduler) pushStream(stm stream.Stream) error {
@@ -24,12 +39,91 @@ func (s *SlubbyScheduler) pushStream(stm stream.Stream) error {
 		return ErrSchedulerIsClose
 	}
 
-	// 检查过滤器情况
-	if !s.passFilter(stm) {
+	buf, err := s.enc.StreamEncode(stm)
+	if err != nil {
+		return err
+	}
+
+	// 不通过过滤器
+	if !s.filter.PassFilter(buf) {
 		return nil
 	}
 
-	return s.buffer.PutStream(stm)
+	return s.buffer.PutStream(context.TODO(), stm)
+}
+
+func (s *SlubbyScheduler) pullStream(ctx context.Context) (stream.Stream, error) {
+	if s.isClose {
+		return nil, ErrSchedulerIsClose
+	}
+
+	return s.buffer.GetStream(ctx)
+}
+
+func (s *SlubbyScheduler) do(ctx context.Context) {
+	defer func() {
+		if err := recover(); err != nil {
+			s.recv <- stream.FromError(stream.SchedulerCover, fmt.Errorf("%v", err))
+		}
+	}()
+
+	if s.buffer.Len() == 0 {
+		return
+	}
+
+	stm, err := s.pullStream(ctx)
+	switch err {
+	case nil:
+		// 忽略空读错误
+	case buffer.ErrStreamBufferIsEmpty, buffer.ErrStreamContentIsCancel:
+		return
+	default:
+		s.recv <- stream.FromError(stream.SchedulerCover, err)
+		return
+	}
+
+	// 默认推送
+	stm.SetForm(stream.SchedulerCover)
+	stm.SetForm(s.forwardCover)
+	s.recv <- stm
+}
+
+func (s *SlubbyScheduler) working(ctx context.Context) {
+	for {
+		// 检查关闭
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+		s.do(ctx)
+	}
+}
+
+// run 创建工作流
+func (s *SlubbyScheduler) run() func() {
+	group := sync.WaitGroup{}
+	cancelFunc := make([]func(), 0, 1)
+
+	for i := 0; i < s.process; i++ {
+		ctx, cancel := context.WithCancel(context.TODO())
+
+		// 执行 download 进程
+		group.Add(1)
+		go func(c context.Context) {
+			s.working(c)
+			group.Done()
+		}(ctx)
+		cancelFunc = append(cancelFunc, cancel)
+	}
+
+	// 生成关闭方法
+	return func() {
+		for _, cancel := range cancelFunc {
+			cancel()
+		}
+		group.Wait()
+	}
 }
 
 // Streaming 接受下载流
@@ -46,4 +140,32 @@ func (s *SlubbyScheduler) BackStream() <-chan stream.Stream {
 func (s *SlubbyScheduler) Close() error {
 	s.isClose = true
 	return nil
+}
+
+// Finish 结束流
+func (s *SlubbyScheduler) Finish() error {
+	return nil
+}
+
+// NewSlubbyScheduler 创建一个 slubby 调度器
+func NewSlubbyScheduler(opts ...Option) engine.SendAndReceiveComponent {
+	component := &SlubbyScheduler{recv: make(chan stream.Stream)}
+
+	initOption := []Option{
+		WithUselessFilter(), // 默认不使用过滤器
+		WithProcess(1),      // 默认使用单个进程
+	}
+
+	initOption = append(initOption, opts...)
+	for _, optFunc := range initOption {
+		optFunc(component)
+	}
+
+	// 写入关闭函数
+	workingCancel := component.run()
+	component.cancel = func() {
+		workingCancel()
+	}
+
+	return component
 }
