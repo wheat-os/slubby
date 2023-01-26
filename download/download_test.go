@@ -1,8 +1,11 @@
 package download
 
 import (
+	"github.com/wheat-os/slubby/v2/stream/buffer"
+	"github.com/wheat-os/wlog"
 	"io"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/wheat-os/slubby/v2/engine"
@@ -19,6 +22,21 @@ func TestSlubbyDownload(t *testing.T) {
 		{
 			name:      "基础 slubby download",
 			component: NewSlubbyDownload(),
+		},
+		{
+			name: "使用 无阻塞缓冲队列 download",
+			component: NewSlubbyDownload(
+				WithDownloadBuffer(buffer.NewListBuffer(10)),
+				WithTokenBucketLimit(2*time.Second, 1),
+			),
+		},
+		{
+			name: "单线程模型",
+			component: NewSlubbyDownload(
+				WithDownloadBuffer(buffer.NewListBuffer(10)),
+				WithTokenBucketLimit(2*time.Second, 1),
+				WithDownloadProcess(1),
+			),
 		},
 	}
 	for _, tt := range tests {
@@ -54,6 +72,14 @@ func TestSlubbyDownload(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, resp.To(), stream.SpiderCover)
 
+			go func() {
+				for {
+					stm := <-ch
+					wlog.Errorf("%t", stm)
+				}
+			}()
+
+			tt.component.Close()
 		})
 	}
 }
