@@ -19,7 +19,7 @@ var (
 
 type RoundTripper func(inStream stream.Stream) (stream.Stream, error)
 
-type SlubbyComponent struct {
+type SlubbyDownload struct {
 	roundTripper RoundTripper
 	// 返回 cover 以及 bool, 标识是否重试, 以及转 component 处理,
 	// stream.Cover 为 stream.DownloadCover 时 直接重试
@@ -36,24 +36,24 @@ type SlubbyComponent struct {
 	cancel  func()
 }
 
-func (h *SlubbyComponent) pushRequest(data stream.Stream) error {
+func (h *SlubbyDownload) pushRequest(ctx context.Context, data stream.Stream) error {
 	if h.isClose {
 		return ErrRequestBufferIsClose
 	}
 
-	return h.buffer.PutStream(data)
+	return h.buffer.PutStream(ctx, data)
 }
 
-func (h *SlubbyComponent) pullRequest() (stream.Stream, error) {
-	return h.buffer.GetStream()
+func (h *SlubbyDownload) pullRequest(ctx context.Context) (stream.Stream, error) {
+	return h.buffer.GetStream(ctx)
 }
 
-func (h *SlubbyComponent) Size() int {
+func (h *SlubbyDownload) Size() int {
 	return h.buffer.Len()
 }
 
 // downTripper 实现请求的首发方法
-func (h *SlubbyComponent) downTripper(req stream.Stream) (stream.Stream, stream.Cover, error) {
+func (h *SlubbyDownload) downTripper(req stream.Stream) (stream.Stream, stream.Cover, error) {
 	for {
 		resp, err := h.roundTripper(req)
 		if err == nil {
@@ -78,7 +78,7 @@ func (h *SlubbyComponent) downTripper(req stream.Stream) (stream.Stream, stream.
 }
 
 // do 工作流
-func (h *SlubbyComponent) do(ctx context.Context) {
+func (h *SlubbyDownload) do(ctx context.Context) {
 	defer func() {
 		if err := recover(); err != nil {
 			h.recv <- stream.FromError(stream.DownloadCover, fmt.Errorf("%v", err))
@@ -89,7 +89,7 @@ func (h *SlubbyComponent) do(ctx context.Context) {
 		return
 	}
 
-	req, err := h.pullRequest()
+	req, err := h.pullRequest(ctx)
 	switch err {
 	case nil:
 		// 忽略读取错误
@@ -130,7 +130,7 @@ func (h *SlubbyComponent) do(ctx context.Context) {
 }
 
 // working 工作方法
-func (h *SlubbyComponent) working(ctx context.Context) {
+func (h *SlubbyDownload) working(ctx context.Context) {
 	for {
 		// 检查关闭
 		select {
@@ -143,30 +143,56 @@ func (h *SlubbyComponent) working(ctx context.Context) {
 	}
 }
 
+func (h *SlubbyDownload) run() func() {
+	// 运行 slubby download
+	group := sync.WaitGroup{}
+	cancelFunc := make([]func(), 0, h.process)
+
+	for i := 0; i < h.process; i++ {
+		ctx, cancel := context.WithCancel(context.Background())
+		cancelFunc = append(cancelFunc, cancel)
+
+		// 执行 download 进程
+		group.Add(1)
+		go func(c context.Context) {
+			h.working(c)
+			group.Done()
+		}(ctx)
+	}
+
+	// 生成关闭方法
+	return func() {
+		for _, cancel := range cancelFunc {
+			cancel()
+		}
+		group.Wait()
+	}
+}
+
 // Streaming 接受下载流
-func (h *SlubbyComponent) Streaming(data stream.Stream) error {
-	return h.pushRequest(data)
+func (h *SlubbyDownload) Streaming(data stream.Stream) error {
+	return h.pushRequest(context.TODO(), data)
 }
 
 // BackStream 获取响应推流器
-func (h *SlubbyComponent) BackStream() <-chan stream.Stream {
+func (h *SlubbyDownload) BackStream() <-chan stream.Stream {
 	return h.recv
 }
 
 // Close 关闭下载器
-func (h *SlubbyComponent) Close() error {
+func (h *SlubbyDownload) Close() error {
 	h.isClose = true
 	h.cancel()
 	return nil
 }
 
 // NewSlubbyDownload 创建一个默认的 slubby 下载器
-func NewSlubbyDownload(opts ...OptFunc) engine.SendAndReceiveComponent {
+func NewSlubbyDownload(opts ...Option) engine.SendAndReceiveComponent {
 	var defaultProcessNum = runtime.NumCPU()
 
-	component := &SlubbyComponent{recv: make(chan stream.Stream)}
+	component := &SlubbyDownload{recv: make(chan stream.Stream)}
 
-	initOption := []OptFunc{
+	initOption := []Option{
 		WithHttpClientTransport(&http.Client{}),                     // 默认使用默认的 HTTP 下载器
 		WithDownloadProcess(defaultProcessNum),                      // 默认使用 CPU 数量的进程数
 		WithDirectRetry(0),                                          // 默认不执行重试
@@ -180,27 +206,11 @@ func NewSlubbyDownload(opts ...OptFunc) engine.SendAndReceiveComponent {
 		optFunc(component)
 	}
 
-	// 运行 slubby download
-	group := sync.WaitGroup{}
-	cancelFunc := make([]func(), 0, component.process)
-	for i := 0; i < component.process; i++ {
-		ctx, cancel := context.WithCancel(context.TODO())
+	workingCancel := component.run()
 
-		// 执行 download 进程
-		group.Add(1)
-		go func(c context.Context) {
-			component.working(c)
-			group.Done()
-		}(ctx)
-		cancelFunc = append(cancelFunc, cancel)
-	}
-
-	// 生成关闭方法
+	// 写入关闭函数
 	component.cancel = func() {
-		for _, cancel := range cancelFunc {
-			cancel()
-		}
-		group.Wait()
+		workingCancel()
 	}
 
 	return component

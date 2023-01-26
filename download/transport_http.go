@@ -7,7 +7,7 @@ import (
 	sHttp "github.com/wheat-os/slubby/v2/stream/http"
 )
 
-func withHttpClientTransport(client *http.Client) OptFunc {
+func withHttpClientTransport(client *http.Client) Option {
 	if client == nil {
 		client = http.DefaultClient
 	}
@@ -25,13 +25,13 @@ func withHttpClientTransport(client *http.Client) OptFunc {
 		return sHttp.NewHttpResponse(resp, inStream.ReplaceCtx(nil))
 	}
 
-	return func(opt *SlubbyComponent) {
+	return func(opt *SlubbyDownload) {
 		opt.roundTripper = roundTripper
 	}
 }
 
 // WithHttpTransport 使用 go http transport
-func WithHttpTransport(transport http.RoundTripper) OptFunc {
+func WithHttpTransport(transport http.RoundTripper) Option {
 	if transport == nil {
 		transport = http.DefaultTransport
 	}
@@ -41,6 +41,6 @@ func WithHttpTransport(transport http.RoundTripper) OptFunc {
 }
 
 // WithHttpClientTransport 使用 go http client
-func WithHttpClientTransport(client *http.Client) OptFunc {
+func WithHttpClientTransport(client *http.Client) Option {
 	return withHttpClientTransport(client)
 }
