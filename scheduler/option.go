@@ -23,7 +23,14 @@ func WithSchedulerBuffer(buffer buffer.StreamBuffer) Option {
 
 // WithForwardCover 定义下载成功转发
 func WithForwardCover(cover stream.Cover) Option {
-	return func(opt *SlubbyScheduler) {
-		opt.forwardCover = cover
+	return func(s *SlubbyScheduler) {
+		s.forwardCover = cover
+	}
+}
+
+// WithStreamEncoder 定义流编码器
+func WithStreamEncoder(enc stream.Encoder) Option {
+	return func(s *SlubbyScheduler) {
+		s.enc = enc
 	}
 }

@@ -12,7 +12,8 @@ import (
 )
 
 var (
-	ErrSchedulerIsClose = errors.New("scheduler is close")
+	ErrSchedulerIsClose  = errors.New("scheduler is close")
+	ErrSchedulerIsFinish = errors.New("scheduler is finish")
 )
 
 // StreamFilter 流过滤器
@@ -30,12 +31,14 @@ type SlubbyScheduler struct {
 	recv    chan stream.Stream
 	process int // 执行线程数
 
-	isClose bool
-	cancel  func()
+	isClose  bool
+	isFinish bool
+	cancel   func()
 }
 
 func (s *SlubbyScheduler) pushStream(stm stream.Stream) error {
-	if s.isClose {
+	// 调度器持久化完成
+	if s.isFinish {
 		return ErrSchedulerIsClose
 	}
 
@@ -139,21 +142,32 @@ func (s *SlubbyScheduler) BackStream() <-chan stream.Stream {
 // Close 关闭下载器
 func (s *SlubbyScheduler) Close() error {
 	s.isClose = true
+	s.cancel()
+
+	// 关闭对外推送管道
+	close(s.recv)
+
 	return nil
 }
 
-// Finish 结束流
+// Finish 结束时持久化调用
 func (s *SlubbyScheduler) Finish() error {
-	return nil
+	s.isFinish = true
+
+	// 执行持久化
+	return s.filter.Close()
 }
 
 // NewSlubbyScheduler 创建一个 slubby 调度器
-func NewSlubbyScheduler(opts ...Option) engine.SendAndReceiveComponent {
+func NewSlubbyScheduler(opts ...Option) engine.SchedulerComponent {
 	component := &SlubbyScheduler{recv: make(chan stream.Stream)}
 
 	initOption := []Option{
-		WithUselessFilter(), // 默认不使用过滤器
-		WithProcess(1),      // 默认使用单个进程
+		WithUselessFilter(),                              // 默认不使用过滤器
+		WithProcess(1),                                   // 默认使用单个进程
+		WithForwardCover(stream.DownloadCover),           // 定义默认流出口
+		WithStreamEncoder(stream.NewBackGroundEncoder()), // 默认编码器
+		WithSchedulerBuffer(buffer.NewListBuffer(10000)), // 默认储存 1w 个调度单位
 	}
 
 	initOption = append(initOption, opts...)

@@ -17,7 +17,25 @@ type CuckooFilter struct {
 }
 
 func (c *CuckooFilter) Close() error {
-	return nil
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.pFile == "" {
+		return nil
+	}
+
+	fs, err := os.Create(c.pFile)
+	if err != nil {
+		return err
+	}
+	defer fs.Close()
+
+	b, err := c.cuckoo.Encode()
+	if err != nil {
+		return err
+	}
+	_, err = fs.Write(b)
+	return err
 }
 
 // PassFilter 检查是否通过过滤器
@@ -29,7 +47,11 @@ func (c *CuckooFilter) PassFilter(b []byte) bool {
 		return true
 	}
 
-	return !c.cuckoo.AddUnique(b)
+	if c.cuckoo.Contain(b) {
+		return false
+	}
+	c.cuckoo.Add(b)
+	return true
 }
 
 func loadCuckoo(filePath string) (*cuckoofilter.Filter, error) {
@@ -84,7 +106,7 @@ func (n *uselessFilter) Close() error {
 }
 
 // PassFilter 检查是否通过过滤器
-func (n *uselessFilter) PassFilter(b []byte) bool {
+func (n *uselessFilter) PassFilter(_ []byte) bool {
 	return true
 }
 

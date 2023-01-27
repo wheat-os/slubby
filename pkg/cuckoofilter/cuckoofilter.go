@@ -248,7 +248,7 @@ func (f *Filter) Info() string {
 		f.table.Info(), f.Size(), f.LoadFactor(), f.table.SizeInBytes()>>10, f.BitsPerItem())
 }
 
-// Encode returns a byte slice representing a Cuckoo filter
+// Encode returns a byte slice representing a cuckoo filter
 func (f *Filter) Encode() ([]byte, error) {
 	filterReader, filterSize := f.EncodeReader()
 	buf := make([]byte, filterSize)
@@ -258,7 +258,7 @@ func (f *Filter) Encode() ([]byte, error) {
 	return buf, nil
 }
 
-// EncodeReader returns a reader representing a Cuckoo filter
+// EncodeReader returns a reader representing a cuckoo filter
 func (f *Filter) EncodeReader() (io.Reader, uint) {
 	var metadata [filterMetadataSize]byte
 
@@ -275,14 +275,14 @@ func (f *Filter) EncodeReader() (io.Reader, uint) {
 	return io.MultiReader(bytes.NewReader(metadata[:]), tableReader), uint(len(metadata)) + tableEncodedSize
 }
 
-// Decode returns a Cuckoo Filter using a copy of the provided byte slice.
+// Decode returns a cuckoo Filter using a copy of the provided byte slice.
 func Decode(b []byte) (*Filter, error) {
 	copiedBytes := make([]byte, len(b))
 	copy(copiedBytes, b)
 	return DecodeFrom(copiedBytes)
 }
 
-// DecodeFrom returns a Cuckoo Filter using the exact provided byte slice (no copy).
+// DecodeFrom returns a cuckoo Filter using the exact provided byte slice (no copy).
 func DecodeFrom(b []byte) (*Filter, error) {
 	if len(b) < 20 {
 		return nil, errors.New("unexpected bytes length")
