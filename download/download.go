@@ -203,18 +203,13 @@ func (h *SlubbyDownload) Close() error {
 		h.recv <- stm
 	}
 	cancel()
-
-	return nil
-}
-
-// Finish 结束整个下载器
-func (h *SlubbyDownload) Finish() error {
 	close(h.recv)
+
 	return nil
 }
 
 // NewSlubbyDownload 创建一个默认的 slubby 下载器
-func NewSlubbyDownload(opts ...Option) engine.SendAndReceiveComponent {
+func NewSlubbyDownload(opts ...Option) engine.DownloadComponent {
 	var defaultProcessNum = runtime.NumCPU()
 
 	component := &SlubbyDownload{recv: make(chan stream.Stream)}

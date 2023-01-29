@@ -39,7 +39,7 @@ type SlubbyScheduler struct {
 func (s *SlubbyScheduler) pushStream(stm stream.Stream) error {
 	// 调度器持久化完成
 	if s.isFinish {
-		return ErrSchedulerIsClose
+		return ErrSchedulerIsFinish
 	}
 
 	buf, err := s.enc.StreamEncode(stm)
