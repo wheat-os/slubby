@@ -19,21 +19,21 @@ type ReceiveCop interface {
 	BackStream() <-chan stream.Stream
 }
 
-// SendAndReceiveComponent 推送以及接受组件
-type SendAndReceiveComponent interface {
+type DownloadComponent interface {
 	SendCop
 	ReceiveCop
 	io.Closer
 }
 
-// SendComponent 只推送组件
-type SendComponent interface {
+type SchedulerComponent interface {
 	SendCop
+	ReceiveCop
 	io.Closer
+	Finish() error
 }
 
-// ReceiveComponent 只接受组件
-type ReceiveComponent interface {
+type SpiderComponent interface {
+	SendCop
 	ReceiveCop
 	io.Closer
 }

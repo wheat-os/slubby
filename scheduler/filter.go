@@ -84,11 +84,26 @@ func WithCuckooFilterP97(syPath string) Option {
 	}
 }
 
-// WithCuckooFilterP99 使用布谷鸟过滤器，99.99 准确率,
+// WithCuckooFilterP99 使用布谷鸟过滤器，99.99 准确率, 更高的空间占用
 func WithCuckooFilterP99(syPath string) Option {
 	cf, err := loadCuckoo(syPath)
 	if err != nil {
 		cf = cuckoofilter.NewFilter(4, 16, 10000000, cuckoofilter.TableTypePacked)
+	}
+
+	return func(s *SlubbyScheduler) {
+		s.filter = &CuckooFilter{
+			cuckoo: cf,
+			pFile:  syPath,
+		}
+	}
+}
+
+// WithCuckooFilter 使用自定义布谷鸟过滤器
+func WithCuckooFilter(syPath string, defaultFilter *cuckoofilter.Filter) Option {
+	cf, err := loadCuckoo(syPath)
+	if err != nil {
+		cf = defaultFilter
 	}
 
 	return func(s *SlubbyScheduler) {

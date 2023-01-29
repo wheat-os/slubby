@@ -17,7 +17,7 @@ import (
 func TestSlubbyDownload(t *testing.T) {
 	tests := []struct {
 		name      string
-		component engine.SendAndReceiveComponent
+		component engine.DownloadComponent
 	}{
 		{
 			name:      "基础 slubby download",

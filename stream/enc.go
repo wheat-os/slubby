@@ -13,3 +13,18 @@ type Encoder interface {
 	// StreamDecode 重分离的 binary 中解析流信息
 	StreamDecode(b []byte) (Stream, error)
 }
+
+type BackGroundEncoder struct {
+}
+
+func (b BackGroundEncoder) StreamEncode(stm Stream) ([]byte, error) {
+	return nil, nil
+}
+
+func (b BackGroundEncoder) StreamDecode(p []byte) (Stream, error) {
+	return Background(), nil
+}
+
+func NewBackGroundEncoder() BackGroundEncoder {
+	return BackGroundEncoder{}
+}

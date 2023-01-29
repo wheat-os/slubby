@@ -34,3 +34,21 @@ func (m *Meta) GetMeta(key any) any {
 
 	return m.value[key]
 }
+
+// WithStreamError 流添加错误
+func WithStreamError(stm Stream, err error) Stream {
+	if stm == nil {
+		return Error(err)
+	}
+	stm.SetErr(err)
+	return stm
+}
+
+// WithStreamValue 添加 meta 数据
+func WithStreamValue(stm Stream, key, val any) Stream {
+	if stm == nil {
+		stm = Background()
+	}
+	stm.SetMeta(key, val)
+	return stm
+}
